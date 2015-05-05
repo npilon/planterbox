@@ -23,7 +23,7 @@ class TestScenarioTestCase(TestCase):
 
         test_case = test_suite._tests[0]
 
-        def mock_addFailure(exc):
+        def mock_addFailure(result, exc):
             self.exc_info = exc
 
         mock_result = Mock(addFailure=Mock(side_effect=mock_addFailure))
