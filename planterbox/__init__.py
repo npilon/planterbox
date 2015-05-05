@@ -12,7 +12,6 @@ from unittest import (
 
 from nose2.events import (
     Plugin,
-    TestOutcomeEvent,
 )
 from nose2.util import (
     exc_info_to_string,
@@ -111,6 +110,17 @@ class UnmatchedStepException(Exception):
     pass
 
 
+class FeatureExcInfo(tuple):
+    """exc_info plus extra information used by ScenarioTestCase"""
+
+    @classmethod
+    def from_exc_info(cls, exc_info, completed_steps, step):
+        self = FeatureExcInfo(exc_info)
+        self.completed_steps = completed_steps
+        self.step = step
+        return self
+
+
 class ScenarioTestCase(TestCase):
     """A test case generated from a scenario in a feature file."""
 
@@ -167,12 +177,11 @@ class ScenarioTestCase(TestCase):
             result.addSuccess(self)
         except KeyboardInterrupt:
             raise
-        except self.failureException as exc:
-            result.addFailure(self, (
+        except self.failureException:
+            result.addFailure(self, FeatureExcInfo.from_exc_info(
+                sys.exc_info(),
                 completed_steps,
                 step,
-                exc,
-                sys.exc_info(),
             ))
         except SkipTest as e:
             self._addSkip(result, str(e))
@@ -184,22 +193,19 @@ class ScenarioTestCase(TestCase):
     def shortDescription(self):
         return '\n'.join(self.feature_doc)
 
-    def featureStepFailure(self, result, completed_steps, step, exc, exc_info):
-        """Create a nose TestOutcomeEvent """
-        event = TestOutcomeEvent(self, result, 'failed', )
-        result.session.hooks.setTestOutcome(event)
-        result.session.hooks.testOutcome(event)
-
     def formatTraceback(self, err):
         """Format containing both feature info and traceback info"""
-        completed_steps, step, exc, exc_info = err
-        formatted = '\n'.join([
-            completed_step.strip() for completed_step in completed_steps
-        ] + [
-            step.strip(),
-            exc_info_to_string(exc_info, super(ScenarioTestCase, self))
-        ])
-        return formatted
+        if isinstance(err, FeatureExcInfo):
+            formatted = '\n'.join([
+                completed_step.strip() for completed_step
+                in err.completed_steps
+            ] + [
+                err.step.strip(),
+                exc_info_to_string(err, super(ScenarioTestCase, self))
+            ])
+            return formatted
+        else:
+            return exc_info_to_string(err, super(ScenarioTestCase, self))
 
     def __str__(self):
         """Display a test's name as Scenario (Feature)"""
