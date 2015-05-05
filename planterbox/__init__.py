@@ -4,7 +4,6 @@ import logging
 import os
 import re
 from unittest import (
-    TestCase,
     TestSuite,
 )
 
@@ -67,9 +66,23 @@ class FeatureTestSuite(TestSuite):
         super(FeatureTestSuite, self).__init__()
         self.world_module = world_module
 
+        self.feature_text, scenarios = parse_feature(feature_text)
+        self.addTests([
+            ScenarioTestCase(scenario) for scenario in scenarios
+        ])
 
-class ScenarioTestCase(TestCase):
-    pass
+
+class ScenarioTestCase(object):
+    def __init__(self, scenario):
+        pass
+
+    def run(self, result=None):
+        result.startTest(self)
+        result.stopTest(self)
+        result.addSuccess(self)
+
+    def __call__(self, *args, **kwds):
+        return self.run(*args, **kwds)
 
 
 def import_feature_module(topLevelDirectory, path):
