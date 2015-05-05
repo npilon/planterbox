@@ -23,22 +23,14 @@ class TestScenarioTestCase(TestCase):
 
         test_case = test_suite._tests[0]
 
-        def mock_hook(event):
-            self.test_event = event
+        def mock_addFailure(exc):
+            self.exc_info = exc
 
-        mock_hooks = Mock(
-            setTestOutcome=Mock(
-                side_effect=mock_hook,
-            ),
-            testOutcome=Mock(
-                side_effect=mock_hook,
-            ),
-        )
-        mock_result = Mock(session=Mock(hooks=mock_hooks))
+        mock_result = Mock(addFailure=Mock(side_effect=mock_addFailure))
 
         test_case.run(mock_result)
 
-        formatted = test_case.formatTraceback(self.test_event.exc_info)
+        formatted = test_case.formatTraceback(self.exc_info)
 
         formatted_lines = formatted.split('\n')
 

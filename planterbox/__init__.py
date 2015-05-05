@@ -22,9 +22,16 @@ log = logging.getLogger('planterbox')
 
 
 INDENT = re.compile(r'^\s+')
+SCENARIO = re.compile(r'^\s+Scenario:')
 
 
 def indent_level(line):
+    """Determine the indent level of a line.
+
+    Indent level is defined as:
+    - Number of whitespace characters at the start of the line
+    - Tabs count as four spaces.
+    """
     ws_match = INDENT.match(line)
     if ws_match is not None:
         ws = ws_match.group()
@@ -32,14 +39,19 @@ def indent_level(line):
         return len(ws)
 
 
-SCENARIO = re.compile(r'^\s+Scenario:')
-
-
 def starts_scenario(line):
+    """Determine if a line signals the start of a scenario."""
     return SCENARIO.match(line)
 
 
 def parse_feature(feature_text):
+    """Parse a feature
+
+    Returning a simple data structure containing:
+    - One element containing all of the lines from feature name & advisory text
+    - One element containing a list of scenarios
+        - Each scenario is a list of lines of the scenario, including the name
+    """
     lines = feature_text.split('\n')
 
     feature = []
@@ -71,6 +83,8 @@ def parse_feature(feature_text):
 
 
 class FeatureTestSuite(TestSuite):
+    """Create a test suite composed of test cases created from a feature"""
+
     def __init__(self, world_module, feature_text):
         super(FeatureTestSuite, self).__init__()
         self.world_module = world_module
@@ -86,19 +100,20 @@ class FeatureTestSuite(TestSuite):
             for scenario in scenarios
         ])
 
-    def run(self, result, debug=False):
-        super(FeatureTestSuite, self).run(result, debug)
-
 
 class MixedStepParametersException(Exception):
+    """Raised when a step mixes positional and named parameters."""
     pass
 
 
 class UnmatchedStepException(Exception):
+    """Raised when a step cannot be found to execute a line from a scenario."""
     pass
 
 
 class ScenarioTestCase(TestCase):
+    """A test case generated from a scenario in a feature file."""
+
     def __init__(self, feature_name, feature_doc, world, scenario):
         super(ScenarioTestCase, self).__init__('nota')
         self.feature_name = feature_name
@@ -111,6 +126,7 @@ class ScenarioTestCase(TestCase):
         self.step_inventory = self.harvest_steps()
 
     def harvest_steps(self):
+        """Find all steps that have been imported into this feature's world"""
         return [
             maybe_step for maybe_step
             in [getattr(self.world, name) for name in dir(self.world)]
@@ -121,6 +137,7 @@ class ScenarioTestCase(TestCase):
         ]
 
     def match_step(self, step):
+        """Find a matching function for a given step from a scenario"""
         for step_fn in self.step_inventory:
             step_match = step_fn.planterbox_pattern.match(step)
             if step_match is not None:
@@ -151,8 +168,12 @@ class ScenarioTestCase(TestCase):
         except KeyboardInterrupt:
             raise
         except self.failureException as exc:
-            self._addStepFailure(result, completed_steps,
-                                 step, exc, sys.exc_info())
+            result.addFailure(self, (
+                completed_steps,
+                step,
+                exc,
+                sys.exc_info(),
+            ))
         except SkipTest as e:
             self._addSkip(result, str(e))
         except:
@@ -163,17 +184,14 @@ class ScenarioTestCase(TestCase):
     def shortDescription(self):
         return '\n'.join(self.feature_doc)
 
-    def _addStepFailure(self, result, completed_steps, step, exc, exc_info):
-        event = TestOutcomeEvent(self, result, 'failed', (
-            completed_steps,
-            step,
-            exc,
-            exc_info,
-        ))
+    def featureStepFailure(self, result, completed_steps, step, exc, exc_info):
+        """Create a nose TestOutcomeEvent """
+        event = TestOutcomeEvent(self, result, 'failed', )
         result.session.hooks.setTestOutcome(event)
         result.session.hooks.testOutcome(event)
 
     def formatTraceback(self, err):
+        """Format containing both feature info and traceback info"""
         completed_steps, step, exc, exc_info = err
         formatted = '\n'.join([
             completed_step.strip() for completed_step in completed_steps
@@ -184,10 +202,12 @@ class ScenarioTestCase(TestCase):
         return formatted
 
     def __str__(self):
+        """Display a test's name as Scenario (Feature)"""
         return "%s (%s)" % (self.scenario_name, self.feature_name)
 
 
 def import_feature_module(topLevelDirectory, path):
+    """Find and import the module for the package containing a .feature"""
     directory = os.path.dirname(path)
     module_path = os.path.relpath(directory, start=topLevelDirectory)
     module_name = module_path.replace('/', '.')
@@ -199,10 +219,8 @@ class Planterbox(Plugin):
     commandLineSwitch = (None, 'with-planterbox',
                          'Load tests from .feature files')
 
-    def __init__(self):
-        pass
-
     def handleFile(self, event):
+        """Produce a FeatureTestSuite from a .feature file."""
         path = event.path
         if os.path.splitext(path)[1] != '.feature':
             return
@@ -221,6 +239,7 @@ class Planterbox(Plugin):
 
 
 def make_step(pattern, fn):
+    """Inner decorator for making a function usable as a step."""
     planterbox_prefix = r'^\s*(?:Given|And|When|Then)\s+'
     fn.planterbox_pattern = re.compile(planterbox_prefix + pattern,
                                        re.IGNORECASE,
@@ -229,4 +248,5 @@ def make_step(pattern, fn):
 
 
 def step(pattern):
+    """Decorate a function with a pattern so it can be used as a step."""
     return partial(make_step, pattern)
