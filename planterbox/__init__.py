@@ -1,5 +1,6 @@
 from functools import partial
 from importlib import import_module
+from itertools import izip
 import logging
 import os
 import re
@@ -21,7 +22,8 @@ log = logging.getLogger('planterbox')
 
 
 INDENT = re.compile(r'^\s+')
-SCENARIO = re.compile(r'^\s+Scenario:')
+SCENARIO = re.compile(r'^\s+Scenario(?: Outline)?:')
+EXAMPLES = re.compile(r'^\s+Examples:')
 
 
 def indent_level(line):
@@ -43,6 +45,11 @@ def starts_scenario(line):
     return SCENARIO.match(line)
 
 
+def starts_examples(line):
+    """Determine if a line signals the start of an example block."""
+    return EXAMPLES.match(line)
+
+
 def parse_feature(feature_text):
     """Parse a feature
 
@@ -56,6 +63,7 @@ def parse_feature(feature_text):
     feature = []
     scenarios = []
     scenario = None
+    append_index = 1
     scenario_indent = 0
 
     for line in lines:
@@ -67,12 +75,15 @@ def parse_feature(feature_text):
             if line_indent <= scenario_indent:
                 scenario = None
                 scenario_indent = 0
+            elif starts_examples(line):
+                append_index = 2
             else:
-                scenario.append(line)
+                scenario[append_index].append(line)
 
         if scenario is None:  # Not elif - want to handle end-of-scenario
             if starts_scenario(line):
-                scenario = [line]
+                scenario = [line, [], []]
+                append_index = 1
                 scenario_indent = indent_level(line)
                 scenarios.append(scenario)
             else:
@@ -129,11 +140,22 @@ class ScenarioTestCase(TestCase):
         self.feature_name = feature_name
         self.feature_doc = feature_doc
         self.world = world
-        self.scenario_name = scenario[0].strip().replace(
-            'Scenario:', ''
-        ).strip()
-        self.scenario = scenario[1:]
-        self.step_inventory = self.harvest_steps()
+        self.scenario_name = SCENARIO.sub('', scenario[0]).strip()
+        self.scenario = scenario[1]
+        self.examples = list(self.load_examples(scenario[2]))
+        self.step_inventory = list(self.harvest_steps())
+
+    def load_examples(self, examples):
+        if not examples:
+            return
+
+        example_header = example_row(examples.pop(0))
+        for example in examples:
+            example_data = example_row(example)
+            yield {
+                label: datum for label, datum
+                in izip(example_header, example_data)
+            }
 
     def harvest_steps(self):
         """Find all steps that have been imported into this feature's world"""
@@ -165,30 +187,46 @@ class ScenarioTestCase(TestCase):
 
     def run(self, result=None):
         result.startTest(self)
-        completed_steps = []
+        self.completed_steps = []
         try:
-            for step in self.scenario:
+            if self.examples:
+                self.run_outline(self.scenario, result)
+            else:
+                self.run_scenario(self.scenario, result)
+        except KeyboardInterrupt:
+            raise
+        finally:
+            result.stopTest(self)
+
+    def run_scenario(self, scenario, result):
+        try:
+            for step in scenario:
                 step_fn, step_arguments = self.match_step(step)
                 if isinstance(step_arguments, dict):
                     step_fn(self, **step_arguments)
                 else:
                     step_fn(self, *step_arguments)
-                completed_steps.append(step)
+                self.completed_steps.append(step)
             result.addSuccess(self)
-        except KeyboardInterrupt:
-            raise
         except self.failureException:
             result.addFailure(self, FeatureExcInfo.from_exc_info(
                 sys.exc_info(),
-                completed_steps,
+                self.completed_steps,
                 step,
             ))
         except SkipTest as e:
             self._addSkip(result, str(e))
         except:
             result.addError(self, sys.exc_info())
-        finally:
-            result.stopTest(self)
+
+    def run_outline(self, scenario, result):
+        for i, example in enumerate(self.examples):
+            if i != 0:
+                result.stopTest(self)
+                result.startTest(self)
+            example_scenario = substitute_steps(scenario, example)
+            self.completed_steps = []
+            self.run_scenario(example_scenario, result)
 
     def shortDescription(self):
         return '\n'.join(self.feature_doc)
@@ -256,3 +294,20 @@ def make_step(pattern, fn):
 def step(pattern):
     """Decorate a function with a pattern so it can be used as a step."""
     return partial(make_step, pattern)
+
+
+def example_row(row):
+    """Turn an example row into a tuple, either of names or of values"""
+
+    items = row.split('|')
+    return [i.strip() for i in items]
+
+
+EXAMPLE_TO_FORMAT = re.compile(r'<(.+?)>')
+
+
+def substitute_steps(scenario, example):
+    return [
+        EXAMPLE_TO_FORMAT.sub(r'{\g<1>}', step).format(**example)
+        for step in scenario
+    ]

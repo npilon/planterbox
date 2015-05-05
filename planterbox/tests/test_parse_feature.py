@@ -22,9 +22,10 @@ class TestParseFeature(TestCase):
         )
 
         scenario = scenarios[0]
+        self.assertEqual(scenario[0].strip(),
+                         'Scenario: I need to verify basic arithmetic.')
         self.assertEqual(
-            [scen.strip() for scen in scenario],
-            ['Scenario: I need to verify basic arithmetic.',
-             'Given I add 1 and 1',
+            [scen.strip() for scen in scenario[1]],
+            ['Given I add 1 and 1',
              'Then the result should be 2']
         )
