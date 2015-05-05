@@ -4,3 +4,7 @@ Feature: Basic Tests
     Scenario: I need to verify basic arithmetic.
         Given I add 1 and 1
         Then the result should be 2
+
+    Scenario: I verify basic arithmetic with fancy keyword arg patterns
+        Given I add x = 1 and y = 1 -> z
+        Then I check z == 2

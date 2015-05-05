@@ -3,6 +3,7 @@ from importlib import import_module
 import logging
 import os
 import re
+import sys
 from unittest import (
     TestCase,
     TestSuite,
@@ -110,7 +111,7 @@ class ScenarioTestCase(TestCase):
             step_match = step_fn.planterbox_pattern.match(step)
             if step_match is not None:
                 if step_match.groupdict():
-                    if len(step_match.groupdict() != step_match.groups()):
+                    if len(step_match.groupdict()) != len(step_match.groups()):
                         raise MixedStepParametersException()
                     return step_fn, step_match.groupdict()
                 else:
@@ -123,14 +124,20 @@ class ScenarioTestCase(TestCase):
 
     def run(self, result=None):
         result.startTest(self)
-        for step in self.scenario:
-            step_fn, step_arguments = self.match_step(step)
-            if isinstance(step_arguments, dict):
-                step_fn(self, **step_arguments)
-            else:
-                step_fn(self, *step_arguments)
-        result.stopTest(self)
-        result.addSuccess(self)
+        try:
+            for step in self.scenario:
+                step_fn, step_arguments = self.match_step(step)
+                if isinstance(step_arguments, dict):
+                    step_fn(self, **step_arguments)
+                else:
+                    step_fn(self, *step_arguments)
+            result.addSuccess(self)
+        except KeyboardInterrupt:
+            raise
+        except:
+            result.addFailure(self, sys.exc_info())
+        finally:
+            result.stopTest(self)
 
     def shortDescription(self):
         return self.scenario_name
