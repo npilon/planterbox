@@ -7,9 +7,16 @@ import sys
 from unittest import (
     TestCase,
     TestSuite,
+    SkipTest,
 )
 
-from nose2.events import Plugin
+from nose2.events import (
+    Plugin,
+    TestOutcomeEvent,
+)
+from nose2.util import (
+    exc_info_to_string,
+)
 
 log = logging.getLogger('planterbox')
 
@@ -68,9 +75,14 @@ class FeatureTestSuite(TestSuite):
         super(FeatureTestSuite, self).__init__()
         self.world_module = world_module
 
-        self.feature_text, scenarios = parse_feature(feature_text)
+        feature_text, scenarios = parse_feature(feature_text)
+        self.feature_name = feature_text[0].strip().replace(
+            'Feature:', ''
+        ).strip()
+        self.feature_doc = [doc.strip() for doc in feature_text[1:]]
         self.addTests([
-            ScenarioTestCase(self.world_module, scenario)
+            ScenarioTestCase(self.feature_name, self.feature_doc,
+                             self.world_module, scenario)
             for scenario in scenarios
         ])
 
@@ -87,8 +99,10 @@ class UnmatchedStepException(Exception):
 
 
 class ScenarioTestCase(TestCase):
-    def __init__(self, world, scenario):
+    def __init__(self, feature_name, feature_doc, world, scenario):
         super(ScenarioTestCase, self).__init__('nota')
+        self.feature_name = feature_name
+        self.feature_doc = feature_doc
         self.world = world
         self.scenario_name = scenario[0].strip().replace(
             'Scenario:', ''
@@ -124,6 +138,7 @@ class ScenarioTestCase(TestCase):
 
     def run(self, result=None):
         result.startTest(self)
+        completed_steps = []
         try:
             for step in self.scenario:
                 step_fn, step_arguments = self.match_step(step)
@@ -131,16 +146,45 @@ class ScenarioTestCase(TestCase):
                     step_fn(self, **step_arguments)
                 else:
                     step_fn(self, *step_arguments)
+                completed_steps.append(step)
             result.addSuccess(self)
         except KeyboardInterrupt:
             raise
+        except self.failureException as exc:
+            self._addStepFailure(result, completed_steps,
+                                 step, exc, sys.exc_info())
+        except SkipTest as e:
+            self._addSkip(result, str(e))
         except:
-            result.addFailure(self, sys.exc_info())
+            result.addError(self, sys.exc_info())
         finally:
             result.stopTest(self)
 
     def shortDescription(self):
-        return self.scenario_name
+        return '\n'.join(self.feature_doc)
+
+    def _addStepFailure(self, result, completed_steps, step, exc, exc_info):
+        event = TestOutcomeEvent(self, result, 'failed', (
+            completed_steps,
+            step,
+            exc,
+            exc_info,
+        ))
+        result.session.hooks.setTestOutcome(event)
+        result.session.hooks.testOutcome(event)
+
+    def formatTraceback(self, err):
+        completed_steps, step, exc, exc_info = err
+        formatted = '\n'.join([
+            completed_step.strip() for completed_step in completed_steps
+        ] + [
+            step.strip(),
+            exc_info_to_string(exc_info, super(ScenarioTestCase, self))
+        ])
+        return formatted
+
+    def __str__(self):
+        return "%s (%s)" % (self.scenario_name, self.feature_name)
 
 
 def import_feature_module(topLevelDirectory, path):
