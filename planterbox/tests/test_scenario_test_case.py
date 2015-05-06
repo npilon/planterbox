@@ -19,7 +19,11 @@ class TestScenarioTestCase(TestCase):
         mock_world = Mock()
         mock_world.fail_test = fail_test
 
-        test_suite = FeatureTestSuite(mock_world, test_feature)
+        test_suite = FeatureTestSuite(
+            world_module=mock_world,
+            feature_text=test_feature,
+            feature_path='foobar.feature',
+        )
 
         test_case = test_suite._tests[0]
 

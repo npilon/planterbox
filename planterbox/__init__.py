@@ -1,6 +1,9 @@
 from functools import partial
-from importlib import import_module
-from itertools import izip
+from itertools import (
+    ifilter,
+    ifilterfalse,
+    izip,
+)
 import logging
 import os
 import re
@@ -16,6 +19,8 @@ from nose2.events import (
 )
 from nose2.util import (
     exc_info_to_string,
+    name_from_path,
+    object_from_name,
 )
 
 log = logging.getLogger('planterbox')
@@ -24,6 +29,7 @@ log = logging.getLogger('planterbox')
 INDENT = re.compile(r'^\s+')
 SCENARIO = re.compile(r'^\s+Scenario(?: Outline)?:')
 EXAMPLES = re.compile(r'^\s+Examples:')
+FEATURE_NAME = re.compile(r'\.feature(?:\:[\d,]+)?$')
 
 
 def indent_level(line):
@@ -95,7 +101,8 @@ def parse_feature(feature_text):
 class FeatureTestSuite(TestSuite):
     """Create a test suite composed of test cases created from a feature"""
 
-    def __init__(self, world_module, feature_text):
+    def __init__(self, world_module, feature_text, feature_path,
+                 scenario_indexes=None):
         super(FeatureTestSuite, self).__init__()
         self.world_module = world_module
 
@@ -105,9 +112,16 @@ class FeatureTestSuite(TestSuite):
         ).strip()
         self.feature_doc = [doc.strip() for doc in feature_text[1:]]
         self.addTests([
-            ScenarioTestCase(self.feature_name, self.feature_doc,
-                             self.world_module, scenario)
-            for scenario in scenarios
+            ScenarioTestCase(
+                feature_name=self.feature_name,
+                feature_doc=self.feature_doc,
+                world=self.world_module,
+                scenario=scenario,
+                feature_path=feature_path,
+                scenario_index=i
+            )
+            for i, scenario in enumerate(scenarios)
+            if scenario_indexes is None or i in scenario_indexes
         ])
 
 
@@ -135,7 +149,8 @@ class FeatureExcInfo(tuple):
 class ScenarioTestCase(TestCase):
     """A test case generated from a scenario in a feature file."""
 
-    def __init__(self, feature_name, feature_doc, world, scenario):
+    def __init__(self, feature_name, feature_doc, world, scenario,
+                 feature_path, scenario_index):
         super(ScenarioTestCase, self).__init__('nota')
         self.feature_name = feature_name
         self.feature_doc = feature_doc
@@ -144,6 +159,15 @@ class ScenarioTestCase(TestCase):
         self.scenario = scenario[1]
         self.examples = list(self.load_examples(scenario[2]))
         self.step_inventory = list(self.harvest_steps())
+        self.feature_path = feature_path
+        self.scenario_index = scenario_index
+
+    def id(self):
+        return '{}:{}:{}'.format(
+            self.world.__name__,
+            os.path.basename(self.feature_path),
+            self.scenario_index,
+        )
 
     def load_examples(self, examples):
         if not examples:
@@ -250,36 +274,86 @@ class ScenarioTestCase(TestCase):
         return "%s (%s)" % (self.scenario_name, self.feature_name)
 
 
-def import_feature_module(topLevelDirectory, path):
-    """Find and import the module for the package containing a .feature"""
-    directory = os.path.dirname(path)
-    module_path = os.path.relpath(directory, start=topLevelDirectory)
-    module_name = module_path.replace('/', '.')
-    return import_module(module_name)
-
-
 class Planterbox(Plugin):
     configSection = 'planterbox'
     commandLineSwitch = (None, 'with-planterbox',
                          'Load tests from .feature files')
 
+    def makeSuiteFromFeature(self, world_module, feature_path,
+                             scenario_indexes=None):
+        with open(feature_path, mode='r') as feature_file:
+            feature_text = feature_file.read()
+
+        return FeatureTestSuite(
+            world_module=world_module,
+            feature_text=feature_text,
+            feature_path=feature_path,
+            scenario_indexes=scenario_indexes,
+        )
+
     def handleFile(self, event):
         """Produce a FeatureTestSuite from a .feature file."""
-        path = event.path
-        if os.path.splitext(path)[1] != '.feature':
+        feature_path = event.path
+        if os.path.splitext(feature_path)[1] != '.feature':
             return
 
         event.handled = True
 
-        feature_module = import_feature_module(event.topLevelDirectory, path)
+        world_package_name = name_from_path(os.path.dirname(feature_path))[0]
+        feature_world = object_from_name(world_package_name)[1]
 
-        with open(path, mode='r') as feature_file:
-            feature_text = feature_file.read()
-
-        return FeatureTestSuite(
-            world_module=feature_module,
-            feature_text=feature_text,
+        return self.makeSuiteFromFeature(
+            world_module=feature_world,
+            feature_path=feature_path,
         )
+
+    def registerInSubprocess(self, event):
+        event.pluginClasses.insert(0, self.__class__)
+
+    def loadTestsFromNames(self, event):
+        is_feature = partial(FEATURE_NAME.search)
+        feature_names = list(ifilter(is_feature, event.names))
+        event.names = list(ifilterfalse(is_feature, event.names))
+
+        test_suites = [
+            self._from_name(name) for name in feature_names
+        ]
+        if event.names:
+            event.extraTests.extend(test_suites)
+        else:
+            event.handled = True
+            return test_suites
+
+    def loadTestsFromName(self, event):
+        log.debug(event)
+        if FEATURE_NAME.search(event.name) is None:
+            return
+
+        event.handled = True
+
+        return self._from_name(event.name)
+
+    def _from_name(self, name):
+        name_parts = name.split(':')
+        if len(name_parts) == 3:
+            scenario_indexes = {int(s) for s in name_parts.pop(-1).split(',')}
+        elif len(name_parts) == 2:
+            scenario_indexes = None
+        else:
+            return
+
+        world_package_name, feature_filename = name_parts
+        feature_world = object_from_name(world_package_name)[1]
+        feature_path = os.path.join(
+            os.path.dirname(feature_world.__file__), feature_filename
+        )
+
+        suite = self.makeSuiteFromFeature(
+            world_module=feature_world,
+            feature_path=feature_path,
+            scenario_indexes=scenario_indexes,
+        )
+        return suite
 
 
 def make_step(pattern, fn):
