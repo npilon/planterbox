@@ -14,7 +14,7 @@ def before_feature_hook(feature_suite):
 
 
 @hook('before', 'scenario')
-def before_scenario_hook(scenario_test):
+def before_scenario_hook(test):
     global hooks_run
     hooks_run.add(('before', 'scenario'))
 
@@ -26,7 +26,7 @@ def before_step_hook(step_text):
 
 
 @step(r'I verify that all before hooks have run')
-def verify_before_hooks(world):
+def verify_before_hooks(test):
     global hooks_run
     assert hooks_run == {('before', 'feature'),
                          ('before', 'scenario'),
@@ -48,7 +48,7 @@ def after_feature_hook(feature_suite):
 
 
 @hook('after', 'scenario')
-def after_scenario_hook(scenario_test):
+def after_scenario_hook(test):
     global hooks_run
     hooks_run.add(('after', 'scenario'))
 
