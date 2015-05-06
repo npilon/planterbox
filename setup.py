@@ -6,7 +6,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 requires = [
     "nose2",
-    "mock"
+    "mock",
 ]
 
 description = 'A plugin for nose2 implementing behavior-driven testing.'

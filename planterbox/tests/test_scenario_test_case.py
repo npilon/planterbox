@@ -17,10 +17,11 @@ class TestScenarioTestCase(TestCase):
             test.fail('Expected Failure')
 
         mock_world = Mock()
+        mock_world.__name__ = 'mock'
         mock_world.fail_test = fail_test
 
         test_suite = FeatureTestSuite(
-            world_module=mock_world,
+            world=mock_world,
             feature_text=test_feature,
             feature_path='foobar.feature',
         )
