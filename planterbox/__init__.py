@@ -416,7 +416,9 @@ def substitute_steps(scenario, example):
 
 def make_hook(timing, stage, fn):
     """Inner decorator for making a function usable as a hook."""
-    getattr(fn, 'planterbox_hook_timing', {}).add(timing, stage)
+    planterbox_hook_timing = getattr(fn, 'planterbox_hook_timing', set())
+    planterbox_hook_timing.add((timing, stage))
+    fn.planterbox_hook_timing = planterbox_hook_timing
     return fn
 
 
@@ -438,7 +440,8 @@ class HookFailedException(Exception):
 def run_hooks(world, tester, result, timing, stage):
     for symbol in dir(world):
         maybe_hook = getattr(world, symbol)
-        maybe_hook_timing = getattr(maybe_hook, 'planterbox_hook_timing', {})
+        maybe_hook_timing = getattr(maybe_hook,
+                                    'planterbox_hook_timing', set())
         if (
             hasattr(maybe_hook, '__call__')
             and hasattr(maybe_hook_timing, '__iter__')
