@@ -126,21 +126,19 @@ class FeatureTestSuite(TestSuite):
         ])
         self.feature_hooks_run = None
 
-    def _handleModuleFixture(self, test, result):
-        if self.feature_hooks_run is None:
-            try:
-                run_hooks(self.world, self, result, 'before', 'feature')
-                self.feature_hooks_run = 'before'
-            except HookFailedException:
-                result._moduleSetUpFailed = True
+    def run(self, result, debug=False):
+        try:
+            run_hooks(self.world, self, result, 'before', 'feature')
+        except HookFailedException:
+            result._moduleSetUpFailed = True
+            return
 
-    def _handleModuleTearDown(self, result):
-        if self.feature_hooks_run == 'before':
-            try:
-                run_hooks(self.world, self, result, 'after', 'feature')
-                self.feature_hooks_run = 'after'
-            except HookFailedException:
-                pass  # Failure already registered
+        super(FeatureTestSuite, self).run(result, debug)
+
+        try:
+            run_hooks(self.world, self, result, 'after', 'feature')
+        except HookFailedException:
+            return  # Failure already registered
 
 
 class MixedStepParametersException(Exception):

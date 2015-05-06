@@ -32,3 +32,28 @@ def verify_before_hooks(world):
                          ('before', 'scenario'),
                          ('before', 'step'),
                          }
+
+
+@hook('after', 'feature')
+def after_feature_hook(feature_suite):
+    global hooks_run
+    hooks_run.add(('after', 'feature'))
+    assert hooks_run == {('before', 'feature'),
+                         ('before', 'scenario'),
+                         ('before', 'step'),
+                         ('after', 'feature'),
+                         ('after', 'scenario'),
+                         ('after', 'step'),
+                         }
+
+
+@hook('after', 'scenario')
+def after_scenario_hook(scenario_test):
+    global hooks_run
+    hooks_run.add(('after', 'scenario'))
+
+
+@hook('after', 'step')
+def after_step_hook(step_text):
+    global hooks_run
+    hooks_run.add(('after', 'step'))
