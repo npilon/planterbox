@@ -7,6 +7,25 @@ from planterbox import (
 hooks_run = set()
 
 
+def setUpModule():
+    global hooks_run
+    hooks_run.add(('setup', 'module'))
+
+
+def tearDownModule():
+    global hooks_run
+    hooks_run.add(('teardown', 'module'))
+    assert hooks_run == {('setup', 'module'),
+                         ('before', 'feature'),
+                         ('before', 'scenario'),
+                         ('before', 'step'),
+                         ('after', 'feature'),
+                         ('after', 'scenario'),
+                         ('after', 'step'),
+                         ('teardown', 'module')
+                         }
+
+
 @hook('before', 'feature')
 def before_feature_hook(feature_suite):
     global hooks_run
@@ -28,7 +47,8 @@ def before_step_hook(step_text):
 @step(r'I verify that all before hooks have run')
 def verify_before_hooks(test):
     global hooks_run
-    assert hooks_run == {('before', 'feature'),
+    assert hooks_run == {('setup', 'module'),
+                         ('before', 'feature'),
                          ('before', 'scenario'),
                          ('before', 'step'),
                          }
@@ -38,7 +58,8 @@ def verify_before_hooks(test):
 def after_feature_hook(feature_suite):
     global hooks_run
     hooks_run.add(('after', 'feature'))
-    assert hooks_run == {('before', 'feature'),
+    assert hooks_run == {('setup', 'module'),
+                         ('before', 'feature'),
                          ('before', 'scenario'),
                          ('before', 'step'),
                          ('after', 'feature'),
