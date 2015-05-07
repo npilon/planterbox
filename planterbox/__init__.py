@@ -21,6 +21,7 @@ from nose2.util import (
     exc_info_to_string,
     name_from_path,
     object_from_name,
+    transplant_class,
 )
 
 log = logging.getLogger('planterbox')
@@ -112,8 +113,9 @@ class FeatureTestSuite(TestSuite):
             'Feature:', ''
         ).strip()
         self.feature_doc = [doc.strip() for doc in feature_text[1:]]
+        MyScenarioTestCase = transplant_class(ScenarioTestCase, world.__name__)
         self.addTests([
-            ScenarioTestCase(
+            MyScenarioTestCase(
                 feature_name=self.feature_name,
                 feature_doc=self.feature_doc,
                 world=self.world,
@@ -308,7 +310,9 @@ class Planterbox(Plugin):
         with open(feature_path, mode='r') as feature_file:
             feature_text = feature_file.read()
 
-        return FeatureTestSuite(
+        MyFeatureTestSuite = transplant_class(FeatureTestSuite, world.__name__)
+
+        return MyFeatureTestSuite(
             world=world,
             feature_text=feature_text,
             feature_path=feature_path,
