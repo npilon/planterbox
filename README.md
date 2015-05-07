@@ -92,7 +92,7 @@ and `'step'` hooks get the text of the step.
 
 ## Scenario Outlines
 
-'planterbox' supports scenario outlines.
+`planterbox` supports scenario outlines.
 These allow you to execute a scenario multiple times with different values.
 For example:
 
