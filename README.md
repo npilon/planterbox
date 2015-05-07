@@ -1,5 +1,5 @@
 # planterbox
-A plugin for running behavior-driven tests using [Gherkin](https://github.com/cucumber/cucumber/wiki/Gherkin) inside `nose2`.
+A plugin for running behavior-driven tests using [gherkin](https://github.com/cucumber/cucumber/wiki/Gherkin) inside `nose2`.
 
 ## Usage
 
@@ -61,3 +61,17 @@ Feature: Basic Tests
 We could then run this test either by running all of the tests in the suite with `nose2` or run it specifically with `nose2 planterbox.tests.test_feature:basic.feature`.
 We could even run the first scenario specifically with `nose2 planterbox.tests.test_feature:basic.feature:0`.
 
+## Writing Steps
+
+`planterbox` steps are python functions decorated with `@planterbox.step(PATTERN)`.
+`PATTERN` can be a python regular expression, which must start matching expected step text after the [gherkin step prefixes](https://github.com/cucumber/cucumber/wiki/Given-When-Then).
+
+Groups matched within `PATTERN` are provided to the decorated function as arguments.
+All steps are provided with the `TestCase` object for the currently executing scenario as their first argument.
+Unnamed groups are provided to the step as positional arguments after this.
+Named groups will be passed as keyword arguments.
+`PATTERN` cannot mix unnamed and named groups.
+If any named groups are used, all groups must be named groups.
+
+All the steps in a feature's package will be available to that feature's scenario.
+These steps can be defined in the package or imported from somewhere else.
