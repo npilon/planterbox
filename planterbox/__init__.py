@@ -333,7 +333,7 @@ class Planterbox(Plugin):
 
         try:
             world_package_name = name_from_path(
-                os.path.dirname(feature_path))[0]
+                os.path.dirname(feature_path))
             feature_world = object_from_name(world_package_name)[1]
         except:
             return event.loader.failedImport(feature_path)
