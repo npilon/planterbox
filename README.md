@@ -13,6 +13,8 @@ plugins = planterbox
 always-on = True
 ```
 
+`planterbox` is compatible with `nose2.plugins.mp`.
+
 ## Writing Tests
 
 `planterbox` tests exist inside a python package which provides a context or "world" for their execution.
