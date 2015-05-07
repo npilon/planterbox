@@ -1,6 +1,7 @@
 from planterbox import step
 
 
+@step(r'I squiggly-add {(\d+)} and {(\d+)}')
 @step(r'I add (\d+) and (\d+)')
 def add(test, a, b):
     a = int(a)

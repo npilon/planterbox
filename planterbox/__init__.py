@@ -209,20 +209,20 @@ class ScenarioTestCase(TestCase):
             in [getattr(self.world, name) for name in dir(self.world)]
             if (
                 hasattr(maybe_step, '__call__')
-                and hasattr(maybe_step, 'planterbox_pattern')
+                and hasattr(maybe_step, 'planterbox_patterns')
             )
         ]
 
     def match_step(self, step):
         """Find a matching function for a given step from a scenario"""
         for step_fn in self.step_inventory:
-            step_match = step_fn.planterbox_pattern.match(step)
-            if step_match is not None:
-                if step_match.groupdict():
+            for pattern in step_fn.planterbox_patterns:
+                step_match = pattern.match(step)
+                if step_match is not None and step_match.groupdict():
                     if len(step_match.groupdict()) != len(step_match.groups()):
                         raise MixedStepParametersException()
                     return step_fn, step_match.groupdict()
-                else:
+                elif step_match is not None:
                     return step_fn, step_match.groups()
 
         raise UnmatchedStepException()
@@ -395,9 +395,11 @@ class Planterbox(Plugin):
 def make_step(pattern, fn):
     """Inner decorator for making a function usable as a step."""
     planterbox_prefix = r'^\s*(?:Given|And|When|Then)\s+'
-    fn.planterbox_pattern = re.compile(planterbox_prefix + pattern,
-                                       re.IGNORECASE,
-                                       )
+    planterbox_patterns = getattr(fn, 'planterbox_patterns', [])
+    planterbox_patterns.append(re.compile(planterbox_prefix + pattern,
+                                          re.IGNORECASE,
+                                          ))
+    fn.planterbox_patterns = planterbox_patterns
     return fn
 
 
@@ -413,9 +415,17 @@ def example_row(row):
     return [i.strip() for i in items]
 
 
+def substitute_step(step):
+    #  Escape any preexisting {}s
+    step = step.replace('{', '{{')
+    step = step.replace('}', '}}')
+    step = EXAMPLE_TO_FORMAT.sub(r'{\g<1>}', step)
+    return step
+
+
 def substitute_steps(scenario, example):
     return [
-        EXAMPLE_TO_FORMAT.sub(r'{\g<1>}', step).format(**example)
+        substitute_step(step).format(**example)
         for step in scenario
     ]
 

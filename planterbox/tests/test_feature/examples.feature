@@ -2,7 +2,7 @@ Feature: Example Tests
     I want to exercise generation of a test with examples from a feature.
 
     Scenario Outline: I need to verify basic arithmetic with examples.
-        Given I add <x> and <y>
+        Given I squiggly-add {<x>} and {<y>}
         Then the result should be <z>
         Examples:
             x | y | z
