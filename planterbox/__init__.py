@@ -126,15 +126,19 @@ class FeatureTestSuite(TestSuite):
             for i, scenario in enumerate(scenarios)
             if scenario_indexes is None or i in scenario_indexes
         ])
-        self.feature_hooks_run = None
+        self.feature_hooks_run = False
+
+    def _handleModuleFixture(self, test, result):
+        super(FeatureTestSuite, self)._handleModuleFixture(test, result)
+        if self.feature_hooks_run is False:
+            try:
+                run_hooks(self.world, self, result, 'before', 'feature')
+                self.feature_hooks_run = True
+            except HookFailedException:
+                result._moduleSetUpFailed = True
+                return
 
     def run(self, result, debug=False):
-        try:
-            run_hooks(self.world, self, result, 'before', 'feature')
-        except HookFailedException:
-            result._moduleSetUpFailed = True
-            return
-
         super(FeatureTestSuite, self).run(result, debug)
 
         try:
