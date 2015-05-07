@@ -15,6 +15,8 @@ setup(name='planterbox',
       version='0.1',
       description=description,
       classifiers=[
+          "Intended Audience :: Developers",
+          'Topic :: Software Development :: Testing',
           "Programming Language :: Python",
       ],
       author='Nick Pilon',
