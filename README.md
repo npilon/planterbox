@@ -69,7 +69,7 @@ We could even run the first scenario specifically with `nose2 planterbox.tests.t
 `PATTERN` can be a python regular expression, which must start matching expected step text after the [gherkin step prefixes](https://github.com/cucumber/cucumber/wiki/Given-When-Then).
 
 Groups matched within `PATTERN` are provided to the decorated function as arguments.
-All steps are provided with the `TestCase` object for the currently executing scenario as their first argument.
+All steps are provided with the `ScenarioTestCase` object for the currently executing scenario as their first argument.
 Unnamed groups are provided to the step as positional arguments after this.
 Named groups will be passed as keyword arguments.
 `PATTERN` cannot mix unnamed and named groups.
@@ -77,3 +77,38 @@ If any named groups are used, all groups must be named groups.
 
 All the steps in a feature's package will be available to that feature's scenario.
 These steps can be defined in the package or imported from somewhere else.
+
+## Hooks, Setup, and Teardown
+
+`setUpModule` and `tearDownModule` methods in a feature's `__init__.py` will be run before and after all features in that package, respectively.
+`planterbox` provides some extra hooks for doing preparation or cleanup.
+Functions can be registered as hooks by decorating them with `@planterbox.hook(TIMING, STAGE)`.
+`TIMING` can be `'before'` or `'after'` and `STAGE` any of `'feature'`, `'scenario'`, or `'step'`.
+
+All hooks are expected to take one argument.
+`'feature'` hooks are passed the `FeatureTestSuite` for the active feature,
+`'scenario'` hooks get the `ScenarioTestCase`,
+and `'step'` hooks get the text of the step.
+
+## Scenario Outlines
+
+'planterbox' supports scenario outlines.
+These allow you to execute a scenario multiple times with different values.
+For example:
+
+```gherkin
+Feature: Example Tests
+    I want to exercise generation of a test with examples from a feature.
+
+    Scenario Outline: I need to verify basic arithmetic with examples.
+        Given I add <x> and <y>
+        Then the result should be <z>
+        Examples:
+            x | y | z
+            1 | 1 | 2
+            1 | 2 | 3
+            2 | 1 | 3
+            2 | 2 | 4
+```
+
+Your `'before'` and `'after'` `'scenario'` hooks will only run once for the entire scenario outline.
