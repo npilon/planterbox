@@ -1,0 +1,10 @@
+0.2
+===
+
+- Rearrange feature -> unittests class mapping for better nose2 MP dispatch
+- When loading from names, normalize test names grouping all scenarios together per feature
+
+0.1
+===
+
+- Initial complete release
