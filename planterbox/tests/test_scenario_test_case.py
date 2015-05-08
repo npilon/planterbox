@@ -1,11 +1,11 @@
-from unittest import TestCase
+from unittest import TestCase, TestSuite
 
 from mock import Mock
 
 
-class TestScenarioTestCase(TestCase):
+class TestFeatureTestCase(TestCase):
     def test_error_output(self):
-        from planterbox import FeatureTestSuite, step
+        from planterbox import FeatureTestCase, step
 
         test_feature = """Feature: A Test Feature
             Scenario: A Test Scenario
@@ -20,13 +20,11 @@ class TestScenarioTestCase(TestCase):
         mock_world.__name__ = 'mock'
         mock_world.fail_test = fail_test
 
-        test_suite = FeatureTestSuite(
+        test_case = FeatureTestCase(
             world=mock_world,
-            feature_text=test_feature,
             feature_path='foobar.feature',
+            feature_text=test_feature,
         )
-
-        test_case = test_suite._tests[0]
 
         def mock_addFailure(result, exc):
             self.exc_info = exc
@@ -39,8 +37,9 @@ class TestScenarioTestCase(TestCase):
 
         formatted_lines = formatted.split('\n')
 
-        self.assertEqual(formatted_lines[0], 'When I fail a test')
-        self.assertEqual(formatted_lines[-2],
-                         'AssertionError: Expected Failure')
-        self.assertEqual(unicode(test_case),
-                         'A Test Scenario (A Test Feature)')
+        self.assertEqual(formatted_lines[0], 'Scenario: A Test Scenario')
+        self.assertEqual(formatted_lines[1], '    When I fail a test')
+        self.assertEqual(
+            formatted_lines[-2], 'AssertionError: Expected Failure')
+        self.assertEqual(
+            unicode(test_case), 'A Test Feature (mock:foobar.feature)')

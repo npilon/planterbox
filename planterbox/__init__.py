@@ -1,3 +1,4 @@
+from collections import defaultdict
 from functools import partial
 from itertools import (
     ifilter,
@@ -100,53 +101,6 @@ def parse_feature(feature_text):
     return feature, scenarios
 
 
-class FeatureTestSuite(TestSuite):
-    """Create a test suite composed of test cases created from a feature"""
-
-    def __init__(self, world, feature_text, feature_path,
-                 scenario_indexes=None):
-        super(FeatureTestSuite, self).__init__()
-        self.world = world
-
-        feature_text, scenarios = parse_feature(feature_text)
-        self.feature_name = feature_text[0].strip().replace(
-            'Feature:', ''
-        ).strip()
-        self.feature_doc = [doc.strip() for doc in feature_text[1:]]
-        MyScenarioTestCase = transplant_class(ScenarioTestCase, world.__name__)
-        self.addTests([
-            MyScenarioTestCase(
-                feature_name=self.feature_name,
-                feature_doc=self.feature_doc,
-                world=self.world,
-                scenario=scenario,
-                feature_path=feature_path,
-                scenario_index=i
-            )
-            for i, scenario in enumerate(scenarios)
-            if scenario_indexes is None or i in scenario_indexes
-        ])
-        self.feature_hooks_run = False
-
-    def _handleModuleFixture(self, test, result):
-        super(FeatureTestSuite, self)._handleModuleFixture(test, result)
-        if self.feature_hooks_run is False:
-            try:
-                run_hooks(self.world, self, result, 'before', 'feature')
-                self.feature_hooks_run = True
-            except HookFailedException:
-                result._moduleSetUpFailed = True
-                return
-
-    def run(self, result, debug=False):
-        super(FeatureTestSuite, self).run(result, debug)
-
-        try:
-            run_hooks(self.world, self, result, 'after', 'feature')
-        except HookFailedException:
-            return  # Failure already registered
-
-
 class MixedStepParametersException(Exception):
     """Raised when a step mixes positional and named parameters."""
     pass
@@ -161,34 +115,43 @@ class FeatureExcInfo(tuple):
     """exc_info plus extra information used by ScenarioTestCase"""
 
     @classmethod
-    def from_exc_info(cls, exc_info, completed_steps, step):
+    def from_exc_info(cls, exc_info, scenario_name, completed_steps,
+                      failed_step):
         self = FeatureExcInfo(exc_info)
+        self.scenario_name = scenario_name
         self.completed_steps = completed_steps
-        self.step = step
+        self.failed_step = failed_step
         return self
 
 
-class ScenarioTestCase(TestCase):
-    """A test case generated from a scenario in a feature file."""
+class FeatureTestCase(TestCase):
+    """A test case generated from the scenarios in a feature file."""
 
-    def __init__(self, feature_name, feature_doc, world, scenario,
-                 feature_path, scenario_index):
-        super(ScenarioTestCase, self).__init__('nota')
-        self.feature_name = feature_name
-        self.feature_doc = feature_doc
+    def __init__(self, world, feature_path, scenario_indexes=None,
+                 feature_text=None):
+        super(FeatureTestCase, self).__init__('nota')
         self.world = world
-        self.scenario_name = SCENARIO.sub('', scenario[0]).strip()
-        self.scenario = scenario[1]
-        self.examples = list(self.load_examples(scenario[2]))
         self.feature_path = feature_path
-        self.scenario_index = scenario_index
+        self.scenario_indexes = scenario_indexes
+
+        if feature_text is None:
+            with open(feature_path, mode='r') as f:
+                feature_text = f.read()
+
+        header_text, self.scenarios = parse_feature(feature_text)
+        self.feature_name = header_text[0].strip().replace(
+            'Feature:', ''
+        ).strip()
+        self.feature_doc = [doc.strip() for doc in header_text[1:]]
 
     def id(self):
-        return '{}:{}:{}'.format(
+        my_id = '{}:{}'.format(
             self.world.__name__,
             os.path.basename(self.feature_path),
-            self.scenario_index,
         )
+        if self.scenario_indexes:
+            my_id = my_id + ','.join(self.scenario_indexes)
+        return my_id
 
     def load_examples(self, examples):
         if not examples:
@@ -231,22 +194,47 @@ class ScenarioTestCase(TestCase):
         """Stub method to satisfy TestCase's obsessive need for a test"""
 
     def run(self, result=None):
-        result.startTest(self)
-        self.step_inventory = list(self.harvest_steps())
-        self.completed_steps = []
         try:
-            run_hooks(self.world, self, result, 'before', 'scenario')
-            if self.examples:
-                self.run_outline(self.scenario, result)
-            else:
-                self.run_scenario(self.scenario, result)
-            run_hooks(self.world, self, result, 'after', 'scenario')
-        except HookFailedException:
-            pass  # Failure already registered
-        finally:
-            result.stopTest(self)
+            run_hooks(self.world, self, result, 'before', 'feature')
+            self.step_inventory = list(self.harvest_steps())
+            try:
+                for i, scenario in enumerate(self.scenarios):
+                    if (
+                        self.scenario_indexes
+                        and i not in self.scenario_indexes
+                    ):
+                        continue
 
-    def run_scenario(self, scenario, result):
+                    (scenario_name,
+                     scenario_steps,
+                     scenario_examples) = scenario
+                    result.startTest(self)
+
+                    try:
+                        run_hooks(self.world, self, result,
+                                  'before', 'scenario')
+                        if scenario_examples:
+                            self.run_outline(scenario_name,
+                                             scenario_steps,
+                                             scenario_examples,
+                                             result)
+                        else:
+                            self.run_scenario(scenario_name,
+                                              scenario_steps,
+                                              result)
+                            run_hooks(self.world, self, result,
+                                      'after', 'scenario')
+                    except HookFailedException:
+                        pass  # Failure already registered
+                    finally:
+                        result.stopTest(self)
+            finally:
+                run_hooks(self.world, self, result, 'after', 'feature')
+        except HookFailedException:
+            return  # Failure already registered.
+
+    def run_scenario(self, name, scenario, result):
+        completed_steps = []
         try:
             for step in scenario:
                 run_hooks(self.world, step, result, 'before', 'step')
@@ -255,7 +243,7 @@ class ScenarioTestCase(TestCase):
                     step_fn(self, **step_arguments)
                 else:
                     step_fn(self, *step_arguments)
-                self.completed_steps.append(step)
+                completed_steps.append(step)
                 run_hooks(self.world, step, result, 'after', 'step')
             result.addSuccess(self)
         except KeyboardInterrupt:
@@ -265,22 +253,24 @@ class ScenarioTestCase(TestCase):
         except self.failureException:
             result.addFailure(self, FeatureExcInfo.from_exc_info(
                 sys.exc_info(),
-                self.completed_steps,
-                step,
+                scenario_name=name,
+                completed_steps=completed_steps,
+                failed_step=step,
             ))
         except SkipTest as e:
             result.addSkip(self, str(e))
         except:
             result.addError(self, sys.exc_info())
 
-    def run_outline(self, scenario, result):
-        for i, example in enumerate(self.examples):
+    def run_outline(self, name, scenario, examples, result):
+        examples = list(self.load_examples(examples))
+        for i, example in enumerate(examples):
             if i != 0:
                 result.stopTest(self)
                 result.startTest(self)
             example_scenario = substitute_steps(scenario, example)
-            self.completed_steps = []
-            self.run_scenario(example_scenario, result)
+            self.run_scenario(name + unicode(example), example_scenario,
+                              result)
 
     def shortDescription(self):
         return '\n'.join(self.feature_doc)
@@ -289,19 +279,21 @@ class ScenarioTestCase(TestCase):
         """Format containing both feature info and traceback info"""
         if isinstance(err, FeatureExcInfo):
             formatted = '\n'.join([
-                completed_step.strip() for completed_step
+                err.scenario_name.strip()
+            ] + [
+                '    ' + completed_step.strip() for completed_step
                 in err.completed_steps
             ] + [
-                err.step.strip(),
-                exc_info_to_string(err, super(ScenarioTestCase, self))
+                '    ' + err.failed_step.strip(),
+                exc_info_to_string(err, super(FeatureTestCase, self))
             ])
             return formatted
         else:
-            return exc_info_to_string(err, super(ScenarioTestCase, self))
+            return exc_info_to_string(err, super(FeatureTestCase, self))
 
     def __str__(self):
-        """Display a test's name as Scenario (Feature)"""
-        return "%s (%s)" % (self.scenario_name, self.feature_name)
+        """Display a test's name as the Feature's name"""
+        return '{} ({})'.format(self.feature_name, self.id())
 
 
 class Planterbox(Plugin):
@@ -311,16 +303,18 @@ class Planterbox(Plugin):
 
     def makeSuiteFromFeature(self, world, feature_path,
                              scenario_indexes=None):
-        with open(feature_path, mode='r') as feature_file:
-            feature_text = feature_file.read()
+        MyTestSuite = transplant_class(TestSuite, world.__name__)
 
-        MyFeatureTestSuite = transplant_class(FeatureTestSuite, world.__name__)
+        MyFeatureTestCase = transplant_class(FeatureTestCase, world.__name__)
 
-        return MyFeatureTestSuite(
-            world=world,
-            feature_text=feature_text,
-            feature_path=feature_path,
-            scenario_indexes=scenario_indexes,
+        return MyTestSuite(
+            tests=[
+                MyFeatureTestCase(
+                    world=world,
+                    feature_path=feature_path,
+                    scenario_indexes=scenario_indexes,
+                ),
+            ],
         )
 
     def handleFile(self, event):
@@ -351,9 +345,7 @@ class Planterbox(Plugin):
         feature_names = list(ifilter(is_feature, event.names))
         event.names = list(ifilterfalse(is_feature, event.names))
 
-        test_suites = [
-            self._from_name(name) for name in feature_names
-        ]
+        test_suites = list(self._from_names(feature_names))
         if event.names:
             event.extraTests.extend(test_suites)
         else:
@@ -367,29 +359,27 @@ class Planterbox(Plugin):
 
         event.handled = True
 
-        return self._from_name(event.name)
+        features = list(self._from_names([event.name]))
 
-    def _from_name(self, name):
-        name_parts = name.split(':')
-        if len(name_parts) == 3:
-            scenario_indexes = {int(s) for s in name_parts.pop(-1).split(',')}
-        elif len(name_parts) == 2:
-            scenario_indexes = None
-        else:
-            return
+        return features[0]
 
-        world_package_name, feature_filename = name_parts
-        feature_world = object_from_name(world_package_name)[1]
-        feature_path = os.path.join(
-            os.path.dirname(feature_world.__file__), feature_filename
-        )
+    def _from_names(self, names):
+        by_feature = normalize_names(names)
 
-        suite = self.makeSuiteFromFeature(
-            world=feature_world,
-            feature_path=feature_path,
-            scenario_indexes=scenario_indexes,
-        )
-        return suite
+        for (
+            world_package_name, feature_filename
+        ), scenario_indexes in sorted(by_feature.iteritems()):
+            feature_world = object_from_name(world_package_name)[1]
+            feature_path = os.path.join(
+                os.path.dirname(feature_world.__file__), feature_filename
+            )
+
+            suite = self.makeSuiteFromFeature(
+                world=feature_world,
+                feature_path=feature_path,
+                scenario_indexes=scenario_indexes,
+            )
+            yield suite
 
 
 def make_step(pattern, fn):
@@ -477,3 +467,30 @@ def run_hook(tester, result, hook):
     except Exception as e:
         result.addError(tester, sys.exc_info())
         raise HookFailedException('Error')
+
+
+def normalize_names(names):
+    """Normalize a seequence of feature test names.
+
+    Aims to:
+    - Collect together separate entries referring to different scenarios in
+      the same feature.
+    - Order the resulting names in a predictable manner.
+    """
+
+    by_feature = defaultdict(set)
+    for name in sorted(names):
+        name_parts = name.split(':')
+        if len(name_parts) == 3:
+            scenario_indexes = {int(s) for s in name_parts.pop(-1).split(',')}
+            name_parts = tuple(name_parts)
+            if name_parts not in by_feature or by_feature[name_parts]:
+                by_feature[name_parts].update(scenario_indexes)
+        elif len(name_parts) == 2:
+            name_parts = tuple(name_parts)
+            scenario_indexes = None
+            by_feature[name_parts] = set()
+        else:
+            continue
+
+    return by_feature
