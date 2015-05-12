@@ -150,7 +150,8 @@ class FeatureTestCase(TestCase):
             os.path.basename(self.feature_path),
         )
         if self.scenario_indexes:
-            my_id = my_id + ','.join(self.scenario_indexes)
+            my_id = my_id + ','.join([unicode(i) for i
+                                      in self.scenario_indexes])
         return my_id
 
     def load_examples(self, examples):
