@@ -59,6 +59,12 @@ def starts_examples(line):
     return EXAMPLES.match(line)
 
 
+def skipline(line):
+    """Determine whether a line is something to skip - a comment or blank"""
+    stripped_line = line.strip()
+    return not stripped_line or stripped_line.startswith('#')
+
+
 def parse_feature(feature_text):
     """Parse a feature
 
@@ -76,7 +82,7 @@ def parse_feature(feature_text):
     scenario_indent = 0
 
     for line in lines:
-        if not line.strip():
+        if skipline(line):
             continue
 
         if scenario is not None:
@@ -189,7 +195,7 @@ class FeatureTestCase(TestCase):
                 elif step_match is not None:
                     return step_fn, step_match.groups()
 
-        raise UnmatchedStepException()
+        raise UnmatchedStepException(step)
 
     def nota(self):
         """Stub method to satisfy TestCase's obsessive need for a test"""
