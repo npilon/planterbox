@@ -12,7 +12,7 @@ requires = [
 description = 'A plugin for nose2 implementing behavior-driven testing.'
 
 setup(name='planterbox',
-      version='0.2.2',
+      version='0.3',
       description=description,
       license='MIT',
       classifiers=[
