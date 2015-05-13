@@ -8,6 +8,11 @@ SCENARIO = re.compile(r'^\s+Scenario(?: Outline)?:')
 EXAMPLES = re.compile(r'^\s+Examples:')
 
 
+class UnclosedMultilineStepError(Exception):
+    """Raised when a multiline step is not properly closed."""
+    pass
+
+
 def indent_level(line):
     """Determine the indent level of a line.
 
@@ -53,12 +58,24 @@ def parse_feature(feature_text):
     scenario = None
     append_index = 1
     scenario_indent = 0
+    in_multiline = False
 
     for line in lines:
         if skipline(line):
             continue
 
         if scenario is not None:
+            if in_multiline:
+                if line.strip() == '"""':
+                    in_multiline = False
+                else:
+                    scenario[append_index][-1] += '\n' + line
+                continue
+
+            if line.strip() == '"""':
+                in_multiline = True
+                continue
+
             line_indent = indent_level(line)
             if line_indent <= scenario_indent:
                 scenario = None
@@ -76,5 +93,8 @@ def parse_feature(feature_text):
                 scenarios.append(scenario)
             else:
                 feature.append(line)
+
+    if in_multiline:
+        raise UnclosedMultilineStepError()
 
     return feature, scenarios

@@ -323,7 +323,7 @@ def make_step(pattern, fn):
     planterbox_prefix = r'^\s*(?:Given|And|When|Then)\s+'
     planterbox_patterns = getattr(fn, 'planterbox_patterns', [])
     planterbox_patterns.append(re.compile(planterbox_prefix + pattern,
-                                          re.IGNORECASE,
+                                          re.IGNORECASE | re.DOTALL,
                                           ))
     fn.planterbox_patterns = planterbox_patterns
     return fn

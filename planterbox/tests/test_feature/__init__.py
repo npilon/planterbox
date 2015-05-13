@@ -26,3 +26,9 @@ def add_keywords(test, y, x, result_name):
 def check_result_keyword(test, value, result_name):
     value = int(value)
     test.assertEqual(getattr(test, result_name), value)
+
+
+@step(r'I sum up the following:(.+)')
+def sum_up(test, numbers):
+    numbers = [int(i) for i in numbers.split('\n') if i]
+    test.result = sum(numbers)
