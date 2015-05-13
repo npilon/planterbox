@@ -318,20 +318,34 @@ class Planterbox(Plugin):
             yield suite
 
 
-def make_step(pattern, fn):
+def make_step(pattern, multiline, fn):
     """Inner decorator for making a function usable as a step."""
     planterbox_prefix = r'^\s*(?:Given|And|When|Then)\s+'
     planterbox_patterns = getattr(fn, 'planterbox_patterns', [])
-    planterbox_patterns.append(re.compile(planterbox_prefix + pattern,
-                                          re.IGNORECASE | re.DOTALL,
-                                          ))
+
+    if multiline:
+        if isinstance(multiline, basestring):
+            pattern = pattern + r'\n(?P<{}>(?:.|\n)+)'.format(multiline)
+        else:
+            pattern = pattern + r'\n((?:.|\n)+)'
+
+    planterbox_patterns.append(re.compile(
+        planterbox_prefix + pattern, re.IGNORECASE
+    ))
     fn.planterbox_patterns = planterbox_patterns
     return fn
 
 
-def step(pattern):
-    """Decorate a function with a pattern so it can be used as a step."""
-    return partial(make_step, pattern)
+def step(pattern, multiline=False):
+    """Decorate a function with a pattern so it can be used as a step.
+
+    Optional arguments:
+    - multiline: If true, this step-pattern will be turned into a multiline
+      pattern. This adds a regular expression to the end that captures all
+      remaining lines as a single group. If a string, that string will be used
+      as the name of the multiline group.
+    """
+    return partial(make_step, pattern, multiline)
 
 
 def example_row(row):

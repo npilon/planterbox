@@ -28,7 +28,8 @@ def check_result_keyword(test, value, result_name):
     test.assertEqual(getattr(test, result_name), value)
 
 
-@step(r'I sum up the following:(.+)')
+@step(r'I sum up the following with a named group:', multiline='numbers')
+@step(r'I sum up the following:', multiline=True)
 def sum_up(test, numbers):
     numbers = [int(i) for i in numbers.split('\n') if i]
     test.result = sum(numbers)
