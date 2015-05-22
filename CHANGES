@@ -1,3 +1,8 @@
+0.3.1
+=====
+
+- Add planterbox config section as .config on all FeatureTestCases
+
 0.3
 ===
 

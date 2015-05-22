@@ -63,11 +63,12 @@ class FeatureTestCase(TestCase):
     """A test case generated from the scenarios in a feature file."""
 
     def __init__(self, world, feature_path, scenario_indexes=None,
-                 feature_text=None):
+                 feature_text=None, config=None):
         super(FeatureTestCase, self).__init__('nota')
         self.world = world
         self.feature_path = feature_path
         self.scenario_indexes = scenario_indexes
+        self.config = config
 
         if feature_text is None:
             with open(feature_path, mode='r') as f:
@@ -249,6 +250,7 @@ class Planterbox(Plugin):
                     world=world,
                     feature_path=feature_path,
                     scenario_indexes=scenario_indexes,
+                    config=self.config,
                 ),
             ],
         )
