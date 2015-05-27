@@ -159,8 +159,8 @@ class FeatureTestCase(TestCase):
                             self.run_scenario(scenario_name,
                                               scenario_steps,
                                               result)
-                            run_hooks(self.world, self, result,
-                                      'after', 'scenario')
+                        run_hooks(self.world, self, result,
+                                  'after', 'scenario')
                     except HookFailedException:
                         pass  # Failure already registered
                     finally:
