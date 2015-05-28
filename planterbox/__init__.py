@@ -227,7 +227,7 @@ class FeatureTestCase(TestCase):
                               result)
 
     def shortDescription(self):
-        return '\n'.join(self.feature_doc)
+        return self.feature_doc[0] if self.feature_doc else None
 
     def formatTraceback(self, err):
         """Format containing both feature info and traceback info"""
