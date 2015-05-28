@@ -2,6 +2,7 @@
 =====
 
 - Add planterbox config section as .config on all FeatureTestCases
+- Add planterbox output plugin for summarizing feature results
 
 0.3
 ===
