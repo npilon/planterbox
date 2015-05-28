@@ -50,9 +50,11 @@ class FeatureExcInfo(tuple):
     """exc_info plus extra information used by ScenarioTestCase"""
 
     @classmethod
-    def from_exc_info(cls, exc_info, scenario_name, completed_steps,
+    def from_exc_info(cls, exc_info, scenario_index,
+                      scenario_name, completed_steps,
                       failed_step):
         self = FeatureExcInfo(exc_info)
+        self.scenario_index = scenario_index
         self.scenario_name = scenario_name
         self.completed_steps = completed_steps
         self.failed_step = failed_step
@@ -81,14 +83,18 @@ class FeatureTestCase(TestCase):
         self.feature_doc = [doc.strip() for doc in header_text[1:]]
 
     def id(self):
-        my_id = '{}:{}'.format(
+        if self.scenario_indexes:
+            return self.feature_id() + ':' + ','.join(
+                [unicode(i) for i in self.scenario_indexes]
+            )
+        else:
+            return self.feature_id()
+
+    def feature_id(self):
+        return '{}:{}'.format(
             self.world.__name__,
             os.path.basename(self.feature_path),
         )
-        if self.scenario_indexes:
-            my_id = my_id + ':' + ','.join([unicode(i) for i
-                                            in self.scenario_indexes])
-        return my_id
 
     def load_examples(self, examples):
         if not examples:
@@ -151,12 +157,14 @@ class FeatureTestCase(TestCase):
                         run_hooks(self.world, self, result,
                                   'before', 'scenario')
                         if scenario_examples:
-                            self.run_outline(scenario_name,
+                            self.run_outline(i,
+                                             scenario_name,
                                              scenario_steps,
                                              scenario_examples,
                                              result)
                         else:
-                            self.run_scenario(scenario_name,
+                            self.run_scenario(i,
+                                              scenario_name,
                                               scenario_steps,
                                               result)
                         run_hooks(self.world, self, result,
@@ -170,7 +178,7 @@ class FeatureTestCase(TestCase):
         except HookFailedException:
             return  # Failure already registered.
 
-    def run_scenario(self, name, scenario, result):
+    def run_scenario(self, index, name, scenario, result):
         completed_steps = []
         try:
             for step in scenario:
@@ -190,6 +198,7 @@ class FeatureTestCase(TestCase):
         except self.failureException:
             result.addFailure(self, FeatureExcInfo.from_exc_info(
                 sys.exc_info(),
+                scenario_index=index,
                 scenario_name=name,
                 completed_steps=completed_steps,
                 failed_step=step,
@@ -197,16 +206,24 @@ class FeatureTestCase(TestCase):
         except SkipTest as e:
             result.addSkip(self, str(e))
         except:
-            result.addError(self, sys.exc_info())
+            result.addError(self, FeatureExcInfo.from_exc_info(
+                sys.exc_info(),
+                scenario_index=index,
+                scenario_name=name,
+                completed_steps=completed_steps,
+                failed_step=step,
+            ))
 
-    def run_outline(self, name, scenario, examples, result):
+    def run_outline(self, index, name, scenario, examples, result):
         examples = list(self.load_examples(examples))
         for i, example in enumerate(examples):
             if i != 0:
                 result.stopTest(self)
                 result.startTest(self)
             example_scenario = substitute_steps(scenario, example)
-            self.run_scenario(name + unicode(example), example_scenario,
+            self.run_scenario(index,
+                              '{} <- {}'.format(name, unicode(example)),
+                              example_scenario,
                               result)
 
     def shortDescription(self):
