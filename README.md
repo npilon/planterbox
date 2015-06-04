@@ -17,7 +17,7 @@ always-on = True
 
 ## Writing Tests
 
-`planterbox` tests exist inside a python package which provides a context or "world" for their execution.
+`planterbox` tests exist inside a python package which provides a context for their execution.
 You should write your tests in `.feature` files in the package directory.
 `.feature` files have access to all steps defined in or imported into their package's `__init__.py`.
 For example, with the directory structure:

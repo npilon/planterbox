@@ -1,8 +1,9 @@
-0.3.1
+0.4
 =====
 
 - Add planterbox config section as .config on all FeatureTestCases
 - Add planterbox output plugin for summarizing feature results
+- Remove test.world support - it was a terrible idea
 
 0.3
 ===

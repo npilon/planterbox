@@ -1,5 +1,6 @@
 from collections import defaultdict
 from functools import partial
+from importlib import import_module
 from itertools import (
     ifilter,
     ifilterfalse,
@@ -64,10 +65,9 @@ class FeatureExcInfo(tuple):
 class FeatureTestCase(TestCase):
     """A test case generated from the scenarios in a feature file."""
 
-    def __init__(self, world, feature_path, scenario_indexes=None,
-                 feature_text=None, config=None):
+    def __init__(self, feature_path, scenario_indexes=None, feature_text=None,
+                 config=None):
         super(FeatureTestCase, self).__init__('nota')
-        self.world = world
         self.feature_path = feature_path
         self.scenario_indexes = scenario_indexes
         self.config = config
@@ -92,7 +92,7 @@ class FeatureTestCase(TestCase):
 
     def feature_id(self):
         return '{}:{}'.format(
-            self.world.__name__,
+            self.__module__,
             os.path.basename(self.feature_path),
         )
 
@@ -109,10 +109,11 @@ class FeatureTestCase(TestCase):
             }
 
     def harvest_steps(self):
-        """Find all steps that have been imported into this feature's world"""
+        """Find all steps that have been imported into this feature's module"""
+        module = import_module(self.__module__)
         return [
             maybe_step for maybe_step
-            in [getattr(self.world, name) for name in dir(self.world)]
+            in [getattr(module, name) for name in dir(module)]
             if (
                 hasattr(maybe_step, '__call__')
                 and hasattr(maybe_step, 'planterbox_patterns')
@@ -137,8 +138,9 @@ class FeatureTestCase(TestCase):
         """Stub method to satisfy TestCase's obsessive need for a test"""
 
     def run(self, result=None):
+        module = import_module(self.__module__)
         try:
-            run_hooks(self.world, self, result, 'before', 'feature')
+            run_hooks(module, self, result, 'before', 'feature')
             self.step_inventory = list(self.harvest_steps())
             try:
                 for i, scenario in enumerate(self.scenarios):
@@ -154,42 +156,46 @@ class FeatureTestCase(TestCase):
                     result.startTest(self)
 
                     try:
-                        run_hooks(self.world, self, result,
-                                  'before', 'scenario')
+                        run_hooks(module, self, result, 'before', 'scenario')
                         if scenario_examples:
-                            self.run_outline(i,
-                                             scenario_name,
-                                             scenario_steps,
-                                             scenario_examples,
-                                             result)
+                            self.run_outline(
+                                module=module,
+                                index=i,
+                                name=scenario_name,
+                                scenario=scenario_steps,
+                                examples=scenario_examples,
+                                result=result,
+                            )
                         else:
-                            self.run_scenario(i,
-                                              scenario_name,
-                                              scenario_steps,
-                                              result)
-                        run_hooks(self.world, self, result,
-                                  'after', 'scenario')
+                            self.run_scenario(
+                                module=module,
+                                index=i,
+                                name=scenario_name,
+                                scenario=scenario_steps,
+                                result=result,
+                            )
+                        run_hooks(module, self, result, 'after', 'scenario')
                     except HookFailedException:
                         pass  # Failure already registered
                     finally:
                         result.stopTest(self)
             finally:
-                run_hooks(self.world, self, result, 'after', 'feature')
+                run_hooks(module, self, result, 'after', 'feature')
         except HookFailedException:
             return  # Failure already registered.
 
-    def run_scenario(self, index, name, scenario, result):
+    def run_scenario(self, module, index, name, scenario, result):
         completed_steps = []
         try:
             for step in scenario:
-                run_hooks(self.world, step, result, 'before', 'step')
+                run_hooks(module, step, result, 'before', 'step')
                 step_fn, step_arguments = self.match_step(step)
                 if isinstance(step_arguments, dict):
                     step_fn(self, **step_arguments)
                 else:
                     step_fn(self, *step_arguments)
                 completed_steps.append(step)
-                run_hooks(self.world, step, result, 'after', 'step')
+                run_hooks(module, step, result, 'after', 'step')
             result.addSuccess(self)
         except KeyboardInterrupt:
             raise
@@ -214,17 +220,20 @@ class FeatureTestCase(TestCase):
                 failed_step=step,
             ))
 
-    def run_outline(self, index, name, scenario, examples, result):
+    def run_outline(self, module, index, name, scenario, examples, result):
         examples = list(self.load_examples(examples))
         for i, example in enumerate(examples):
             if i != 0:
                 result.stopTest(self)
                 result.startTest(self)
             example_scenario = substitute_steps(scenario, example)
-            self.run_scenario(index,
-                              '{} <- {}'.format(name, unicode(example)),
-                              example_scenario,
-                              result)
+            self.run_scenario(
+                module=module,
+                index=index,
+                name='{} <- {}'.format(name, unicode(example)),
+                scenario=example_scenario,
+                result=result,
+            )
 
     def shortDescription(self):
         return self.feature_doc[0] if self.feature_doc else None
@@ -255,16 +264,15 @@ class Planterbox(Plugin):
     commandLineSwitch = (None, 'with-planterbox',
                          'Load tests from .feature files')
 
-    def makeSuiteFromFeature(self, world, feature_path,
+    def makeSuiteFromFeature(self, module, feature_path,
                              scenario_indexes=None):
-        MyTestSuite = transplant_class(TestSuite, world.__name__)
+        MyTestSuite = transplant_class(TestSuite, module.__name__)
 
-        MyFeatureTestCase = transplant_class(FeatureTestCase, world.__name__)
+        MyFeatureTestCase = transplant_class(FeatureTestCase, module.__name__)
 
         return MyTestSuite(
             tests=[
                 MyFeatureTestCase(
-                    world=world,
                     feature_path=feature_path,
                     scenario_indexes=scenario_indexes,
                     config=self.config,
@@ -281,14 +289,14 @@ class Planterbox(Plugin):
         event.handled = True
 
         try:
-            world_package_name = name_from_path(
+            feature_package_name = name_from_path(
                 os.path.dirname(feature_path))
-            feature_world = object_from_name(world_package_name)[1]
+            feature_module = object_from_name(feature_package_name)[1]
         except:
             return event.loader.failedImport(feature_path)
 
         return self.makeSuiteFromFeature(
-            world=feature_world,
+            module=feature_module,
             feature_path=feature_path,
         )
 
@@ -322,15 +330,15 @@ class Planterbox(Plugin):
         by_feature = normalize_names(names)
 
         for (
-            world_package_name, feature_filename
+            feature_package_name, feature_filename
         ), scenario_indexes in sorted(by_feature.iteritems()):
-            feature_world = object_from_name(world_package_name)[1]
+            feature_module = object_from_name(feature_package_name)[1]
             feature_path = os.path.join(
-                os.path.dirname(feature_world.__file__), feature_filename
+                os.path.dirname(feature_module.__file__), feature_filename
             )
 
             suite = self.makeSuiteFromFeature(
-                world=feature_world,
+                module=feature_module,
                 feature_path=feature_path,
                 scenario_indexes=scenario_indexes,
             )
@@ -412,9 +420,9 @@ class HookFailedException(Exception):
     pass
 
 
-def run_hooks(world, tester, result, timing, stage):
-    for symbol in dir(world):
-        maybe_hook = getattr(world, symbol)
+def run_hooks(module, tester, result, timing, stage):
+    for symbol in dir(module):
+        maybe_hook = getattr(module, symbol)
         maybe_hook_timing = getattr(maybe_hook,
                                     'planterbox_hook_timing', set())
         if (
