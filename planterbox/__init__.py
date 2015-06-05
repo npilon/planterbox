@@ -195,13 +195,13 @@ class FeatureTestCase(TestCase):
                 step_fn, step_arguments = self.match_step(step)
                 self.step = step
                 self.step_function = step_fn
-                run_hooks(module, step, result, 'before', 'step')
+                run_hooks(module, self, result, 'before', 'step')
                 if isinstance(step_arguments, dict):
                     step_fn(self, **step_arguments)
                 else:
                     step_fn(self, *step_arguments)
                 completed_steps.append(step)
-                run_hooks(module, step, result, 'after', 'step')
+                run_hooks(module, self, result, 'after', 'step')
             result.addSuccess(self)
         except KeyboardInterrupt:
             raise

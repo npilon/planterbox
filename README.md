@@ -85,10 +85,8 @@ These steps can be defined in the package or imported from somewhere else.
 Functions can be registered as hooks by decorating them with `@planterbox.hook(TIMING, STAGE)`.
 `TIMING` can be `'before'` or `'after'` and `STAGE` any of `'feature'`, `'scenario'`, or `'step'`.
 
-All hooks are expected to take one argument.
-`'feature'` hooks are passed the `FeatureTestSuite` for the active feature,
-`'scenario'` hooks get the `ScenarioTestCase`,
-and `'step'` hooks get the text of the step.
+All hooks are expected to take one argument:
+the `TestCase` subclass for the active feature.
 
 ## Scenario Outlines
 
