@@ -1,3 +1,15 @@
+0.4.1
+=====
+
+- Add after error and after failure hooks
+- Pass TestCase instance to step hooks just like all other hooks
+- Provide convenience attributes on TestCase:
+  - scenario_name
+  - scenario_index (during error, failure, scenario and step hooks)
+  - step
+  - step_function (during error, failure, and step hooks)
+  - exc_info (during error and failure hooks)
+
 0.4
 =====
 
