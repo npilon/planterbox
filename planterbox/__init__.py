@@ -186,10 +186,16 @@ class FeatureTestCase(TestCase):
 
     def run_scenario(self, module, index, name, scenario, result):
         completed_steps = []
+        self.scenario_name = name
+        self.scenario_index = index
+        self.step = None
+        self.step_function = None
         try:
             for step in scenario:
-                run_hooks(module, step, result, 'before', 'step')
                 step_fn, step_arguments = self.match_step(step)
+                self.step = step
+                self.step_function = step_fn
+                run_hooks(module, step, result, 'before', 'step')
                 if isinstance(step_arguments, dict):
                     step_fn(self, **step_arguments)
                 else:
@@ -219,6 +225,11 @@ class FeatureTestCase(TestCase):
                 completed_steps=completed_steps,
                 failed_step=step,
             ))
+        finally:
+            del self.scenario_name
+            del self.scenario_index
+            del self.step
+            del self.step_function
 
     def run_outline(self, module, index, name, scenario, examples, result):
         examples = list(self.load_examples(examples))
