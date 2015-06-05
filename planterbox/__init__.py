@@ -208,23 +208,29 @@ class FeatureTestCase(TestCase):
         except HookFailedException:
             pass  # Failure already registered
         except self.failureException:
-            result.addFailure(self, FeatureExcInfo.from_exc_info(
+            self.exc_info = FeatureExcInfo.from_exc_info(
                 sys.exc_info(),
                 scenario_index=index,
                 scenario_name=name,
                 completed_steps=completed_steps,
                 failed_step=step,
-            ))
+            )
+            result.addFailure(self, self.exc_info)
+            run_hooks(module, self, result, 'after', 'failure')
+            del self.exc_info
         except SkipTest as e:
             result.addSkip(self, str(e))
         except:
-            result.addError(self, FeatureExcInfo.from_exc_info(
+            self.exc_info = FeatureExcInfo.from_exc_info(
                 sys.exc_info(),
                 scenario_index=index,
                 scenario_name=name,
                 completed_steps=completed_steps,
                 failed_step=step,
-            ))
+            )
+            result.addError(self, self.exc_info)
+            run_hooks(module, self, result, 'after', 'error')
+            del self.exc_info
         finally:
             del self.scenario_name
             del self.scenario_index
