@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 from functools import partial
 from importlib import import_module
 from itertools import (
@@ -280,6 +281,13 @@ class Planterbox(Plugin):
     configSection = 'planterbox'
     commandLineSwitch = (None, 'with-planterbox',
                          'Load tests from .feature files')
+
+    def register(self):
+        super(Planterbox, self).register()
+        if 'start_time' not in self.config._mvd:
+            start_time = datetime.now().isoformat()
+            self.config._mvd['start_time'] = [start_time]
+            self.config._items.append(('start_time', start_time))
 
     def makeSuiteFromFeature(self, module, feature_path,
                              scenario_indexes=None):
