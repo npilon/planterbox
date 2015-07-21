@@ -285,13 +285,13 @@ class Planterbox(Plugin):
     def register(self):
         super(Planterbox, self).register()
         if 'start_time' not in self.config._mvd:
-            start_date = datetime.now().strftime("%Y-%m-%d")
-            start_time = datetime.now().strftime("%H_%M_%S")
             
-            self.config._mvd['start_date'] = [start_date]
-            self.config._mvd['start_time'] = [start_time]
-            self.config._items.append(('start_date', start_date))
-            self.config._items.append(('start_time', start_time))
+            start_datetime = datetime.now()
+            
+            self.config._mvd['start_date'] = [start_datetime.strftime("%Y-%m-%d")]
+            self.config._mvd['start_time'] = [start_datetime.strftime("%H_%M_%S")]
+            self.config._items.append(('start_date', start_datetime.strftime("%Y-%m-%d")))
+            self.config._items.append(('start_time', start_datetime.strftime("%H_%M_%S")))
 
     def makeSuiteFromFeature(self, module, feature_path,
                              scenario_indexes=None):
