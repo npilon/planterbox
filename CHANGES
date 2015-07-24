@@ -9,6 +9,7 @@
   - step
   - step_function (during error, failure, and step hooks)
   - exc_info (during error and failure hooks)
+- Automatically add test date & time to config (reporting convenience)
 
 0.4
 =====
