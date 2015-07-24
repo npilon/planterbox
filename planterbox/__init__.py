@@ -285,9 +285,9 @@ class Planterbox(Plugin):
     def register(self):
         super(Planterbox, self).register()
         if 'start_time' not in self.config._mvd:
-            
+
             start_datetime = datetime.now()
-            
+
             self.config._mvd['start_date'] = [start_datetime.strftime("%Y-%m-%d")]
             self.config._mvd['start_time'] = [start_datetime.strftime("%H_%M_%S")]
             self.config._items.append(('start_date', start_datetime.strftime("%Y-%m-%d")))
@@ -439,7 +439,7 @@ def hook(timing, stage):
 
     if timing not in ('before', 'after'):
         raise ValueError(timing)
-    if stage not in ('feature', 'scenario', 'step'):
+    if stage not in ('feature', 'scenario', 'step', 'error', 'failure'):
         raise ValueError(stage)
 
     return partial(make_hook, timing, stage)
