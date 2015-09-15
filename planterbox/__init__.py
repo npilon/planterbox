@@ -372,7 +372,7 @@ class Planterbox(Plugin):
 
 def make_step(pattern, multiline, fn):
     """Inner decorator for making a function usable as a step."""
-    planterbox_prefix = r'^\s*(?:Given|And|When|Then)\s+'
+    planterbox_prefix = r'^\s*(?:Given|And|When|Then|But)\s+'
     planterbox_patterns = getattr(fn, 'planterbox_patterns', [])
 
     if multiline:
