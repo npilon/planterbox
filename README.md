@@ -83,7 +83,7 @@ These steps can be defined in the package or imported from somewhere else.
 `setUpModule` and `tearDownModule` methods in a feature's `__init__.py` will be run before and after all features in that package, respectively.
 `planterbox` provides some extra hooks for doing preparation or cleanup.
 Functions can be registered as hooks by decorating them with `@planterbox.hook(TIMING, STAGE)`.
-`TIMING` can be `'before'` or `'after'` and `STAGE` any of `'feature'`, `'scenario'`, `'step'` `'failure'`, or `'error'`.
+`TIMING` can be `'before'` or `'after'` and `STAGE` any of `'feature'`, `'scenario'`, `'step'`, `'failure'`, or `'error'`.
 
 All hooks are expected to take one argument:
 the `TestCase` subclass for the active feature.
