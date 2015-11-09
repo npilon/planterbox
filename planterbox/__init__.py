@@ -151,7 +151,7 @@ class FeatureTestCase(TestCase):
                     ):
                         continue
 
-                    (scenario_name,
+                    (self.scenario_name,
                      scenario_steps,
                      scenario_examples) = scenario
                     result.startTest(self)
@@ -162,7 +162,6 @@ class FeatureTestCase(TestCase):
                             self.run_outline(
                                 module=module,
                                 index=i,
-                                name=scenario_name,
                                 scenario=scenario_steps,
                                 examples=scenario_examples,
                                 result=result,
@@ -171,7 +170,6 @@ class FeatureTestCase(TestCase):
                             self.run_scenario(
                                 module=module,
                                 index=i,
-                                name=scenario_name,
                                 scenario=scenario_steps,
                                 result=result,
                             )
@@ -180,14 +178,14 @@ class FeatureTestCase(TestCase):
                         pass  # Failure already registered
                     finally:
                         result.stopTest(self)
+                        del self.scenario_name
             finally:
                 run_hooks(module, self, result, 'after', 'feature')
         except HookFailedException:
             return  # Failure already registered.
 
-    def run_scenario(self, module, index, name, scenario, result):
+    def run_scenario(self, module, index, scenario, result):
         completed_steps = []
-        self.scenario_name = name
         self.scenario_index = index
         self.step = None
         self.step_function = None
@@ -212,7 +210,7 @@ class FeatureTestCase(TestCase):
             self.exc_info = FeatureExcInfo.from_exc_info(
                 sys.exc_info(),
                 scenario_index=index,
-                scenario_name=name,
+                scenario_name=self.scenario_name,
                 completed_steps=completed_steps,
                 failed_step=step,
             )
@@ -225,7 +223,7 @@ class FeatureTestCase(TestCase):
             self.exc_info = FeatureExcInfo.from_exc_info(
                 sys.exc_info(),
                 scenario_index=index,
-                scenario_name=name,
+                scenario_name=self.scenario_name,
                 completed_steps=completed_steps,
                 failed_step=step,
             )
@@ -233,28 +231,32 @@ class FeatureTestCase(TestCase):
             run_hooks(module, self, result, 'after', 'error')
             del self.exc_info
         finally:
-            del self.scenario_name
             del self.scenario_index
             del self.step
             del self.step_function
 
-    def run_outline(self, module, index, name, scenario, examples, result):
+    def run_outline(self, module, index, scenario, examples, result):
         examples = list(self.load_examples(examples))
+        original_scenario_name = self.scenario_name
         for i, example in enumerate(examples):
             if i != 0:
                 result.stopTest(self)
+                self.scenario_name = '{} <- {}'.format(
+                    original_scenario_name, unicode(example))
                 result.startTest(self)
             example_scenario = substitute_steps(scenario, example)
             self.run_scenario(
                 module=module,
                 index=index,
-                name='{} <- {}'.format(name, unicode(example)),
                 scenario=example_scenario,
                 result=result,
             )
 
     def shortDescription(self):
-        return self.feature_doc[0] if self.feature_doc else None
+        if getattr(self, 'scenario_name', None):
+            return self.scenario_name
+        else:
+            return self.feature_doc[0] if self.feature_doc else None
 
     def formatTraceback(self, err):
         """Format containing both feature info and traceback info"""
@@ -288,10 +290,14 @@ class Planterbox(Plugin):
 
             start_datetime = datetime.now()
 
-            self.config._mvd['start_date'] = [start_datetime.strftime("%Y-%m-%d")]
-            self.config._mvd['start_time'] = [start_datetime.strftime("%H_%M_%S")]
-            self.config._items.append(('start_date', start_datetime.strftime("%Y-%m-%d")))
-            self.config._items.append(('start_time', start_datetime.strftime("%H_%M_%S")))
+            self.config._mvd['start_date']\
+                = [start_datetime.strftime("%Y-%m-%d")]
+            self.config._mvd['start_time']\
+                = [start_datetime.strftime("%H_%M_%S")]
+            self.config._items.append(('start_date',
+                                       start_datetime.strftime("%Y-%m-%d")))
+            self.config._items.append(('start_time',
+                                       start_datetime.strftime("%H_%M_%S")))
 
     def makeSuiteFromFeature(self, module, feature_path,
                              scenario_indexes=None):
