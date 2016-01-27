@@ -1,3 +1,4 @@
+import codecs
 from collections import defaultdict
 from datetime import datetime
 from functools import partial
@@ -74,7 +75,7 @@ class FeatureTestCase(TestCase):
         self.config = config
 
         if feature_text is None:
-            with open(feature_path, mode='r') as f:
+            with codecs.open(feature_path, mode='r', encoding='utf-8') as f:
                 feature_text = f.read()
 
         header_text, self.scenarios = parse_feature(feature_text)
