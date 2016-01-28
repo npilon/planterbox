@@ -1,3 +1,8 @@
+0.5
+===
+
+- Use utf8 encoding when reading feature files
+
 0.4.1
 =====
 
