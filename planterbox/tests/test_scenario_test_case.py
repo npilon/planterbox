@@ -5,7 +5,8 @@ from mock import Mock, patch
 
 class TestFeatureTestCase(TestCase):
     def test_error_output(self):
-        from planterbox import FeatureTestCase, step
+        from planterbox.feature import FeatureTestCase
+        from planterbox import step
 
         test_feature = """Feature: A Test Feature
             Scenario: A Test Scenario
@@ -31,7 +32,8 @@ class TestFeatureTestCase(TestCase):
 
         mock_result = Mock(addFailure=Mock(side_effect=mock_addFailure))
 
-        with patch('planterbox.import_module', Mock(return_value=mock_world)):
+        with patch('planterbox.feature.import_module',
+                   Mock(return_value=mock_world)):
             test_case.run(mock_result)
 
         formatted = test_case.formatTraceback(self.exc_info)
@@ -46,7 +48,7 @@ class TestFeatureTestCase(TestCase):
             unicode(test_case), 'A Test Feature (mock:foobar.feature)')
 
     def test_outline_error(self):
-        from planterbox import FeatureTestCase
+        from planterbox.feature import FeatureTestCase
 
         test_feature = """Feature: A Test Feature
             Scenario: A Test Scenario
@@ -71,7 +73,8 @@ class TestFeatureTestCase(TestCase):
 
         mock_result = Mock(addError=Mock(side_effect=mock_addError))
 
-        with patch('planterbox.import_module', Mock(return_value=mock_world)):
+        with patch('planterbox.feature.import_module',
+                   Mock(return_value=mock_world)):
             test_case.run(mock_result)
 
         formatted = test_case.formatTraceback(self.exc_info)
