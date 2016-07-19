@@ -147,9 +147,19 @@ class FeatureTestCase(TestCase):
                     ):
                         continue
 
-                    (self.scenario_name,
-                     scenario_steps,
-                     scenario_examples) = scenario
+                    (
+                        self.scenario_name,
+                        scenario_steps,
+                        scenario_examples
+                    ) = scenario
+
+                    if scenario_examples:
+                        scenario_examples = list(self.load_examples(
+                            scenario_examples
+                        ))
+                        self.original_scenario_name = self.scenario_name
+                        self.scenario_example_name(scenario_examples[0])
+
                     result.startTest(self)
 
                     try:
@@ -232,13 +242,10 @@ class FeatureTestCase(TestCase):
             del self.step_function
 
     def run_outline(self, module, index, scenario, examples, result):
-        examples = list(self.load_examples(examples))
-        original_scenario_name = self.scenario_name
         for i, example in enumerate(examples):
             if i != 0:
                 result.stopTest(self)
-                self.scenario_name = '{} <- {}'.format(
-                    original_scenario_name, unicode(example))
+                self.scenario_example_name(example)
                 result.startTest(self)
             try:
                 example_scenario = substitute_steps(scenario, example)
@@ -259,6 +266,10 @@ class FeatureTestCase(TestCase):
                 scenario=example_scenario,
                 result=result,
             )
+
+    def scenario_example_name(self, example):
+        self.scenario_name = '{} <- {}'.format(
+            self.original_scenario_name, unicode(example).strip())
 
     def shortDescription(self):
         if getattr(self, 'scenario_name', None):

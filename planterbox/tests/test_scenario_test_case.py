@@ -78,7 +78,10 @@ class TestFeatureTestCase(TestCase):
 
         formatted_lines = formatted.split('\n')
 
-        self.assertEqual(formatted_lines[0], 'Scenario: A Test Scenario')
+        self.assertEqual(
+            formatted_lines[0],
+            "Scenario: A Test Scenario <- {'y': '1', 'x': '1', 'z': '2'}"
+        )
         self.assertEqual(
             formatted_lines[-2],
             """UnmatchedSubstitutionException: "undefined" missing from \
