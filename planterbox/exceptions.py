@@ -1,6 +1,11 @@
 """Exceptions used to indicate planterbox-related states"""
 
 
+class HookFailedException(Exception):
+    """Propagate and summarize failure of a hook"""
+    pass
+
+
 class MixedStepParametersException(Exception):
     """Raised when a step mixes positional and named parameters."""
     pass

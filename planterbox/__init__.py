@@ -29,6 +29,7 @@ from nose2.util import (
 )
 
 from .exceptions import (
+    HookFailedException,
     MixedStepParametersException,
     UnmatchedStepException,
     UnmatchedSubstitutionException,
@@ -477,10 +478,6 @@ def hook(timing, stage):
         raise ValueError(stage)
 
     return partial(make_hook, timing, stage)
-
-
-class HookFailedException(Exception):
-    pass
 
 
 def run_hooks(module, tester, result, timing, stage):
