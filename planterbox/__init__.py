@@ -31,6 +31,7 @@ from nose2.util import (
 from .exceptions import (
     MixedStepParametersException,
     UnmatchedStepException,
+    UnmatchedSubstitutionException,
 )
 from .parsing import (
     parse_feature,
@@ -239,7 +240,19 @@ class FeatureTestCase(TestCase):
                 self.scenario_name = '{} <- {}'.format(
                     original_scenario_name, unicode(example))
                 result.startTest(self)
-            example_scenario = substitute_steps(scenario, example)
+            try:
+                example_scenario = substitute_steps(scenario, example)
+            except UnmatchedSubstitutionException as uso:
+                self.exc_info = FeatureExcInfo.from_exc_info(
+                    sys.exc_info(),
+                    scenario_index=index,
+                    scenario_name=self.scenario_name,
+                    completed_steps=[],
+                    failed_step=uso.step,
+                )
+                result.addError(self, self.exc_info)
+                continue
+
             self.run_scenario(
                 module=module,
                 index=index,
@@ -421,10 +434,19 @@ def substitute_step(step):
 
 
 def substitute_steps(scenario, example):
-    return [
-        substitute_step(step).format(**example)
-        for step in scenario
-    ]
+    try:
+        return [
+            substitute_step(step).format(**example)
+            for step in scenario
+        ]
+    except KeyError as ke:
+        raise UnmatchedSubstitutionException(
+            step,
+            '"{key}" missing from outline example {example}'.format(
+                key=ke.message,
+                example=example,
+            )
+        )
 
 
 def make_hook(timing, stage, fn):
