@@ -28,6 +28,10 @@ from nose2.util import (
     transplant_class,
 )
 
+from .exceptions import (
+    MixedStepParametersException,
+    UnmatchedStepException,
+)
 from .parsing import (
     parse_feature,
 )
@@ -37,16 +41,6 @@ log = logging.getLogger('planterbox')
 
 EXAMPLE_TO_FORMAT = re.compile(r'<(.+?)>')
 FEATURE_NAME = re.compile(r'\.feature(?:\:[\d,]+)?$')
-
-
-class MixedStepParametersException(Exception):
-    """Raised when a step mixes positional and named parameters."""
-    pass
-
-
-class UnmatchedStepException(Exception):
-    """Raised when a step cannot be found to execute a line from a scenario."""
-    pass
 
 
 class FeatureExcInfo(tuple):
