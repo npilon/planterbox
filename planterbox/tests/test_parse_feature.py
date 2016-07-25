@@ -6,7 +6,7 @@ from unittest import TestCase
 class TestParseFeature(TestCase):
     def test_with_basic(self):
         from . import test_feature
-        from planterbox import parse_feature
+        from planterbox.parsing import parse_feature
 
         features_dir = os.path.dirname(test_feature.__file__)
 
@@ -30,10 +30,9 @@ class TestParseFeature(TestCase):
              'Then the result should be 2']
         )
 
-
-    def test_with_basic(self):
+    def test_with_basic_examples(self):
         from . import test_feature
-        from planterbox import parse_feature
+        from planterbox.parsing import parse_feature
 
         features_dir = os.path.dirname(test_feature.__file__)
         basic_examples_filename = os.path.join(features_dir,

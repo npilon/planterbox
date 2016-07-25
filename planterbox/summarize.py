@@ -1,3 +1,5 @@
+"""nose2 plugin for collecting and summarizing results of planterbox tests"""
+
 from itertools import (
     groupby,
 )
@@ -18,7 +20,7 @@ class PlanterboxSummary(Plugin):
     )
 
     def beforeSummaryReport(self, event):
-        from planterbox import FeatureTestCase, FeatureExcInfo
+        from planterbox.feature import FeatureTestCase, FeatureExcInfo
 
         for key, header in self.SUMMARY_HEADERS:
             reportable_results = [
