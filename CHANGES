@@ -1,3 +1,8 @@
+0.6
+===
+
+- Scenario hooks now fire before & after every example in an outline
+
 0.5
 ===
 
