@@ -154,7 +154,6 @@ class FeatureTestCase(TestCase):
                     result.startTest(self)
 
                     try:
-                        run_hooks(module, self, result, 'before', 'scenario')
                         if scenario_examples:
                             self.run_outline(
                                 module=module,
@@ -170,9 +169,6 @@ class FeatureTestCase(TestCase):
                                 scenario=scenario_steps,
                                 result=result,
                             )
-                        run_hooks(module, self, result, 'after', 'scenario')
-                    except HookFailedException:
-                        pass  # Failure already registered
                     finally:
                         result.stopTest(self)
                         del self.scenario_name
@@ -187,6 +183,7 @@ class FeatureTestCase(TestCase):
         self.step = None
         self.step_function = None
         try:
+            run_hooks(module, self, result, 'before', 'scenario')
             for step in scenario:
                 step_fn, step_arguments = self.match_step(step)
                 self.step = step
@@ -199,6 +196,7 @@ class FeatureTestCase(TestCase):
                 completed_steps.append(step)
                 run_hooks(module, self, result, 'after', 'step')
             result.addSuccess(self)
+            run_hooks(module, self, result, 'after', 'scenario')
         except KeyboardInterrupt:
             raise
         except HookFailedException:
