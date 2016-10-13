@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 
 requires = [
-    "nose2==0.5.0",
+    "nose2>=0.6.0",
     "mock",
 ]
 

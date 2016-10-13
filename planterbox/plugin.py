@@ -80,7 +80,7 @@ class Planterbox(Plugin):
 
         try:
             feature_package_name = name_from_path(
-                os.path.dirname(feature_path))
+                os.path.dirname(feature_path))[0]
             feature_module = object_from_name(feature_package_name)[1]
         except:
             return event.loader.failedImport(feature_path)
