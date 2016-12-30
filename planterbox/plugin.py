@@ -32,7 +32,7 @@ log = logging.getLogger('planterbox')
 
 
 EXAMPLE_TO_FORMAT = re.compile(r'<(.+?)>')
-FEATURE_NAME = re.compile(r'\.feature(?:\:[\d,]+)?$')
+FEATURE_NAME = re.compile(r'\.feature(?:\:.+)?$')
 
 
 class Planterbox(Plugin):
