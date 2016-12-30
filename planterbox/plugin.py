@@ -153,6 +153,8 @@ def normalize_names(names):
             scenarios_to_run = resolve_scenarios(scenario_string)
             name_parts = tuple(name_parts)
             if name_parts not in by_feature or by_feature[name_parts]:
+                # Avoid adding specific scenarios if we've explicitly listed
+                #  an entire feature
                 by_feature[name_parts].update(scenarios_to_run)
         elif len(name_parts) == 2:
             name_parts = tuple(name_parts)
