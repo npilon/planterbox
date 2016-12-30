@@ -132,3 +132,20 @@ scenario multiple times with different values. For example:
 
 Your ``'before'`` and ``'after'`` ``'scenario'`` hooks will only run
 once for the entire scenario outline.
+
+Invoking Tests
+--------------
+
+You can run tests by allowing nose2's autodiscovery to find all of your tests,
+or you can specify specific tests to be run on the command line. When
+specifying specific tests, you can either specify an entire package,
+an entire feature, or individual scenarios.
+
+.. code::
+
+    nose2 planterbox.tests.test_feature
+    nose2 planterbox.tests.test_feature:basic.feature planterbox.tests.test_hooks:hooks.feature
+    nose2 planterbox.tests.test_feature:basic.feature:1
+    nose2 planterbox.tests.test_feature:basic.feature:0
+    nose2 planterbox.tests.test_feature:basic.feature:"I need to verify basic arithmetic"
+    nose2 planterbox.tests.test_feature:basic.feature:"I need to verify basic arithmetic."
