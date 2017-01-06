@@ -75,8 +75,10 @@ class FeatureTestCase(TestCase):
     def id(self):
         if self.scenarios_to_run:
             scenario_string = StringIO()
-            csv.writer(scenario_string).writerow(self.scenarios_to_run)
-            return self.feature_id() + ':' + scenario_string.getvalue()
+            csv.writer(
+                scenario_string, quoting=csv.QUOTE_NONNUMERIC
+            ).writerow(list(self.scenarios_to_run))
+            return self.feature_id() + ':' + scenario_string.getvalue().strip()
         else:
             return self.feature_id()
 

@@ -59,6 +59,12 @@ class TestNormalizeNames(unittest.TestCase):
             {('example.package', 'test.feature'): {0}},
         )
 
+    def test_single_feature_name_scenario(self):
+        self.assertEqual(
+            normalize_names(['example.package:test.feature:A Test Scenario']),
+            {('example.package', 'test.feature'): {'A Test Scenario'}},
+        )
+
     def test_single_feature_index_many_scenarios(self):
         self.assertEqual(
             normalize_names(['example.package:test.feature:3,0,5']),
