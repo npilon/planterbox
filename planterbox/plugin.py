@@ -1,6 +1,7 @@
 """nose2 plugin for discovering and running planterbox features as tests"""
 
 from collections import defaultdict
+import csv
 from datetime import datetime
 from functools import partial
 from itertools import (
@@ -31,7 +32,7 @@ log = logging.getLogger('planterbox')
 
 
 EXAMPLE_TO_FORMAT = re.compile(r'<(.+?)>')
-FEATURE_NAME = re.compile(r'\.feature(?:\:[\d,]+)?$')
+FEATURE_NAME = re.compile(r'\.feature(?:\:.+)?$')
 
 
 class Planterbox(Plugin):
@@ -55,7 +56,7 @@ class Planterbox(Plugin):
                                        start_datetime.strftime("%H_%M_%S")))
 
     def makeSuiteFromFeature(self, module, feature_path,
-                             scenario_indexes=None):
+                             scenarios_to_run=None):
         MyTestSuite = transplant_class(TestSuite, module.__name__)
 
         MyFeatureTestCase = transplant_class(FeatureTestCase, module.__name__)
@@ -64,7 +65,7 @@ class Planterbox(Plugin):
             tests=[
                 MyFeatureTestCase(
                     feature_path=feature_path,
-                    scenario_indexes=scenario_indexes,
+                    scenarios_to_run=scenarios_to_run,
                     config=self.config,
                 ),
             ],
@@ -121,7 +122,7 @@ class Planterbox(Plugin):
 
         for (
             feature_package_name, feature_filename
-        ), scenario_indexes in sorted(by_feature.iteritems()):
+        ), scenarios_to_run in sorted(by_feature.iteritems()):
             feature_module = object_from_name(feature_package_name)[1]
             feature_path = os.path.join(
                 os.path.dirname(feature_module.__file__), feature_filename
@@ -130,7 +131,7 @@ class Planterbox(Plugin):
             suite = self.makeSuiteFromFeature(
                 module=feature_module,
                 feature_path=feature_path,
-                scenario_indexes=scenario_indexes,
+                scenarios_to_run=scenarios_to_run,
             )
             yield suite
 
@@ -148,15 +149,36 @@ def normalize_names(names):
     for name in sorted(names):
         name_parts = name.split(':')
         if len(name_parts) == 3:
-            scenario_indexes = {int(s) for s in name_parts.pop(-1).split(',')}
+            scenario_string = name_parts.pop(-1)
+            scenarios_to_run = resolve_scenarios(scenario_string)
             name_parts = tuple(name_parts)
             if name_parts not in by_feature or by_feature[name_parts]:
-                by_feature[name_parts].update(scenario_indexes)
+                # Avoid adding specific scenarios if we've explicitly listed
+                #  an entire feature
+                by_feature[name_parts].update(scenarios_to_run)
         elif len(name_parts) == 2:
             name_parts = tuple(name_parts)
-            scenario_indexes = None
+            scenarios_to_run = None  # So... All!
             by_feature[name_parts] = set()
         else:
             continue
 
     return by_feature
+
+
+def resolve_scenarios(scenario_string):
+    """Convert a comma-separated string of scenarios into a set of scenarios
+
+    Scenarios can be specified as either scenario names (optionally quoted)
+    or scenario indexes."""
+
+    scenario_string = scenario_string.strip()
+    if not scenario_string:
+        return []
+
+    scenario_parser = csv.reader([scenario_string])
+    scenarios = scenario_parser.next()
+    scenarios = {
+        int(s) if s.isdigit() else s for s in scenarios
+    }
+    return scenarios

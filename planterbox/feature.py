@@ -1,5 +1,7 @@
 """TestCase subclass for executing the scenarios from a feature"""
 
+from cStringIO import StringIO
+import csv
 import codecs
 from importlib import import_module
 from itertools import (
@@ -53,11 +55,11 @@ class FeatureExcInfo(tuple):
 class FeatureTestCase(TestCase):
     """A test case generated from the scenarios in a feature file."""
 
-    def __init__(self, feature_path, scenario_indexes=None, feature_text=None,
+    def __init__(self, feature_path, scenarios_to_run=None, feature_text=None,
                  config=None):
         super(FeatureTestCase, self).__init__('nota')
         self.feature_path = feature_path
-        self.scenario_indexes = scenario_indexes
+        self.scenarios_to_run = scenarios_to_run
         self.config = config
 
         if feature_text is None:
@@ -71,10 +73,12 @@ class FeatureTestCase(TestCase):
         self.feature_doc = [doc.strip() for doc in header_text[1:]]
 
     def id(self):
-        if self.scenario_indexes:
-            return self.feature_id() + ':' + ','.join(
-                [unicode(i) for i in self.scenario_indexes]
-            )
+        if self.scenarios_to_run:
+            scenario_string = StringIO()
+            csv.writer(
+                scenario_string, quoting=csv.QUOTE_NONNUMERIC
+            ).writerow(list(self.scenarios_to_run))
+            return self.feature_id() + ':' + scenario_string.getvalue().strip()
         else:
             return self.feature_id()
 
@@ -133,8 +137,8 @@ class FeatureTestCase(TestCase):
             try:
                 for i, scenario in enumerate(self.scenarios):
                     if (
-                        self.scenario_indexes and
-                        i not in self.scenario_indexes
+                        self.scenarios_to_run and
+                        not self.should_run_scenario(i, scenario)
                     ):
                         continue
 
@@ -176,6 +180,22 @@ class FeatureTestCase(TestCase):
                 run_hooks(module, self, result, 'after', 'feature')
         except HookFailedException:
             return  # Failure already registered.
+
+    def should_run_scenario(self, i, scenario):
+        """Decide whether to run this scenario when running a subset"""
+        scenario_name = scenario[0].partition(':')[2].strip()
+
+        no_trailing_period = (
+            scenario_name[:-1]
+            if scenario_name[-1] == '.'
+            else scenario_name
+        )
+
+        return (
+            scenario_name in self.scenarios_to_run or
+            no_trailing_period in self.scenarios_to_run or
+            i in self.scenarios_to_run
+        )
 
     def run_scenario(self, module, index, scenario, result):
         completed_steps = []
