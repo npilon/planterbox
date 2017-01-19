@@ -1,3 +1,8 @@
+0.6.2
+=====
+
+- Specify scenarios by name in nose2 command-line arguments
+
 0.6.1
 =====
 
