@@ -35,11 +35,14 @@ class PlanterboxSummary(Plugin):
 
     def summarize_features(self, event, reportable_results):
         grouped_features = groupby(
-            sorted(reportable_results,
-                   key=(lambda r: (r.test.feature_id,
-                                   r.exc_info.scenario_index)
-                        )),
-            (lambda r: r.test)
+            sorted(
+                reportable_results,
+                key=(lambda r: (
+                    r.test.feature_id,
+                    r.exc_info.scenario_index,
+                )),
+            ),
+            (lambda r: r.test),
         )
         for test, results in grouped_features:
             event.stream.write('Feature: ' + test.feature_name + '\n')

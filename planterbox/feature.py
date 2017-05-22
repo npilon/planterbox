@@ -74,7 +74,7 @@ class FeatureTestCase(TestCase):
 
         header_text, self.scenarios = parse_feature(feature_text)
         self.feature_name = header_text[0].strip().replace(
-            'Feature:', ''
+            'Feature:', '',
         ).strip()
         self.feature_doc = [doc.strip() for doc in header_text[1:]]
 
@@ -82,7 +82,7 @@ class FeatureTestCase(TestCase):
         if self.scenarios_to_run:
             scenario_string = StringIO()
             csv.writer(
-                scenario_string, quoting=csv.QUOTE_NONNUMERIC
+                scenario_string, quoting=csv.QUOTE_NONNUMERIC,
             ).writerow(list(self.scenarios_to_run))
             return self.feature_id() + ':' + scenario_string.getvalue().strip()
         else:
@@ -151,13 +151,12 @@ class FeatureTestCase(TestCase):
                     (
                         self.scenario_name,
                         scenario_steps,
-                        scenario_examples
+                        scenario_examples,
                     ) = scenario
 
                     if scenario_examples:
-                        scenario_examples = list(self.load_examples(
-                            scenario_examples
-                        ))
+                        scenario_examples = list(
+                            self.load_examples(scenario_examples))
                         self.original_scenario_name = self.scenario_name
                         self.scenario_example_name(scenario_examples[0])
 
@@ -297,13 +296,13 @@ class FeatureTestCase(TestCase):
         """Format containing both feature info and traceback info"""
         if isinstance(err, FeatureExcInfo):
             formatted = '\n'.join([
-                err.scenario_name.strip()
+                err.scenario_name.strip(),
             ] + [
                 '    ' + completed_step.strip() for completed_step
                 in err.completed_steps
             ] + [
                 '    ' + err.failed_step.strip(),
-                exc_info_to_string(err, super(FeatureTestCase, self))
+                exc_info_to_string(err, super(FeatureTestCase, self)),
             ])
             return formatted
         else:
@@ -342,7 +341,7 @@ def substitute_steps(scenario, example):
             '"{key}" missing from outline example {example}'.format(
                 key=ke.args[0],
                 example=clean_dict_repr(example),
-            )
+            ),
         )
 
 

@@ -28,7 +28,7 @@ class TestResolveScenarios(unittest.TestCase):
     def test_some_mixed(self):
         self.assertEqual(
             resolve_scenarios('5,foo,2,4,"foo,bar",5'),
-            {2, 4, 5, 'foo', 'foo,bar'}
+            {2, 4, 5, 'foo', 'foo,bar'},
         )
 
 
@@ -117,13 +117,13 @@ class TestPlanterboxPlugin(unittest.TestCase):
         import planterbox.tests.test_feature as test_feature
         self.test_feature = test_feature
         self.test_feature_path = os.path.dirname(os.path.abspath(
-            test_feature.__file__
+            test_feature.__file__,
         ))
 
         import planterbox.tests.test_hooks as test_hooks
         self.test_hooks = test_hooks
         self.test_hooks_path = os.path.dirname(os.path.abspath(
-            test_hooks.__file__
+            test_hooks.__file__,
         ))
 
         plugin_patcher = mock.patch.multiple(
@@ -140,12 +140,12 @@ class TestPlanterboxPlugin(unittest.TestCase):
     def test_single_feature(self):
         mock_event = mock.Mock()
         mock_event.configure_mock(
-            name='planterbox.tests.test_feature:test.feature'
+            name='planterbox.tests.test_feature:test.feature',
         )
         self.pp.loadTestsFromName(mock_event)
         self.mock_msff.assert_called_once_with(
             feature_path=os.path.join(
-                self.test_feature_path, 'test.feature'
+                self.test_feature_path, 'test.feature',
             ),
             scenarios_to_run=set(),
             module=self.test_feature,
@@ -160,7 +160,7 @@ class TestPlanterboxPlugin(unittest.TestCase):
         self.pp.loadTestsFromNames(mock_event)
         self.mock_msff.assert_called_once_with(
             feature_path=os.path.join(
-                self.test_feature_path, 'test.feature'
+                self.test_feature_path, 'test.feature',
             ),
             scenarios_to_run=set(),
             module=self.test_feature,
@@ -182,26 +182,26 @@ class TestPlanterboxPlugin(unittest.TestCase):
             [
                 mock.call(
                     feature_path=os.path.join(
-                        self.test_feature_path, 'test.feature'
+                        self.test_feature_path, 'test.feature',
                     ),
                     scenarios_to_run=set(),
                     module=self.test_feature,
                 ),
                 mock.call(
                     feature_path=os.path.join(
-                        self.test_feature_path, 'test2.feature'
+                        self.test_feature_path, 'test2.feature',
                     ),
                     scenarios_to_run=set(),
                     module=self.test_feature,
                 ),
                 mock.call(
                     feature_path=os.path.join(
-                        self.test_hooks_path, 'test.feature'
+                        self.test_hooks_path, 'test.feature',
                     ),
                     scenarios_to_run=set(),
                     module=self.test_hooks,
                 ),
-            ]
+            ],
         )
         self.assertTrue(mock_event.handled)
 
@@ -213,7 +213,7 @@ class TestPlanterboxPlugin(unittest.TestCase):
         self.pp.loadTestsFromNames(mock_event)
         self.mock_msff.assert_called_once_with(
             feature_path=os.path.join(
-                self.test_feature_path, 'test.feature'
+                self.test_feature_path, 'test.feature',
             ),
             scenarios_to_run={0},
             module=self.test_feature,
@@ -228,7 +228,7 @@ class TestPlanterboxPlugin(unittest.TestCase):
         self.pp.loadTestsFromNames(mock_event)
         self.mock_msff.assert_called_once_with(
             feature_path=os.path.join(
-                self.test_feature_path, 'test.feature'
+                self.test_feature_path, 'test.feature',
             ),
             scenarios_to_run={0, 3, 5},
             module=self.test_feature,
@@ -246,7 +246,7 @@ class TestPlanterboxPlugin(unittest.TestCase):
         self.pp.loadTestsFromNames(mock_event)
         self.mock_msff.assert_called_once_with(
             feature_path=os.path.join(
-                self.test_feature_path, 'test.feature'
+                self.test_feature_path, 'test.feature',
             ),
             scenarios_to_run={0, 3, 5},
             module=self.test_feature,
@@ -264,7 +264,7 @@ class TestPlanterboxPlugin(unittest.TestCase):
         self.pp.loadTestsFromNames(mock_event)
         self.mock_msff.assert_called_once_with(
             feature_path=os.path.join(
-                self.test_feature_path, 'test.feature'
+                self.test_feature_path, 'test.feature',
             ),
             scenarios_to_run=set(),
             module=self.test_feature,
@@ -282,7 +282,7 @@ class TestPlanterboxPlugin(unittest.TestCase):
         self.pp.loadTestsFromNames(mock_event)
         self.mock_msff.assert_called_once_with(
             feature_path=os.path.join(
-                self.test_feature_path, 'test.feature'
+                self.test_feature_path, 'test.feature',
             ),
             scenarios_to_run=set(),
             module=self.test_feature,
@@ -304,19 +304,19 @@ class TestPlanterboxPlugin(unittest.TestCase):
             [
                 mock.call(
                     feature_path=os.path.join(
-                        self.test_feature_path, 'test.feature'
+                        self.test_feature_path, 'test.feature',
                     ),
                     scenarios_to_run={0, 2, 42, 'foobar'},
                     module=self.test_feature,
                 ),
                 mock.call(
                     feature_path=os.path.join(
-                        self.test_hooks_path, 'test.feature'
+                        self.test_hooks_path, 'test.feature',
                     ),
                     scenarios_to_run={'garply'},
                     module=self.test_hooks,
                 ),
-            ]
+            ],
         )
         self.assertTrue(mock_event.handled)
 
@@ -339,19 +339,19 @@ class TestPlanterboxPlugin(unittest.TestCase):
             [
                 mock.call(
                     feature_path=os.path.join(
-                        self.test_feature_path, 'test.feature'
+                        self.test_feature_path, 'test.feature',
                     ),
                     scenarios_to_run={0, 2, 42, 'foobar'},
                     module=self.test_feature,
                 ),
                 mock.call(
                     feature_path=os.path.join(
-                        self.test_hooks_path, 'test.feature'
+                        self.test_hooks_path, 'test.feature',
                     ),
                     scenarios_to_run={'garply'},
                     module=self.test_hooks,
                 ),
-            ]
+            ],
         )
         self.assertFalse(mock_event.handled)
         self.assertEqual(len(mock_event.extraTests), 2)

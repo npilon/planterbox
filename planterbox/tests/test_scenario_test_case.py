@@ -95,7 +95,7 @@ class TestFeatureTestCase(TestCase):
 
         self.assertEqual(
             formatted_lines[0],
-            "Scenario: A Test Scenario <- {'x': '1', 'y': '1', 'z': '2'}"
+            "Scenario: A Test Scenario <- {'x': '1', 'y': '1', 'z': '2'}",
         )
         self.assertIn(
             """UnmatchedSubstitutionException: "undefined" missing from \
@@ -125,7 +125,7 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
         )
         mock_world.__name__ = 'mock'
         mock_world.test_thing = step(r'I test a thing')(Mock(
-            planterbox_patterns=[]
+            planterbox_patterns=[],
         ))
         mock_world.fail_test = fail_test
 
@@ -174,7 +174,7 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
         )
         mock_world.__name__ = 'mock'
         mock_world.test_thing = step(r'I test a thing')(Mock(
-            planterbox_patterns=[]
+            planterbox_patterns=[],
         ))
         mock_world.fail_test = fail_test
 
@@ -227,7 +227,7 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
         )
         mock_world.__name__ = 'mock'
         mock_world.test_thing = step(r'I test a thing')(Mock(
-            planterbox_patterns=[]
+            planterbox_patterns=[],
         ))
         mock_world.fail_test = fail_test
 
@@ -283,7 +283,7 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
         )
         mock_world.__name__ = 'mock'
         mock_world.test_thing = step(r'I test a thing')(Mock(
-            planterbox_patterns=[]
+            planterbox_patterns=[],
         ))
         mock_world.fail_test = fail_test
 

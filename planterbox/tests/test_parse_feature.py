@@ -18,7 +18,7 @@ class TestParseFeature(TestCase):
         self.assertEqual(
             [feature.strip() for feature in features],
             ['Feature: Basic Tests',
-             'I want to exercise generation of a simple test from a feature.']
+             'I want to exercise generation of a simple test from a feature.'],
         )
 
         scenario = scenarios[0]
@@ -26,8 +26,7 @@ class TestParseFeature(TestCase):
                          'Scenario: I need to verify basic arithmetic.')
         self.assertEqual(
             [scen.strip() for scen in scenario[1]],
-            ['Given I add 1 and 1',
-             'Then the result should be 2']
+            ['Given I add 1 and 1', 'Then the result should be 2'],
         )
 
     def test_with_basic_examples(self):
@@ -46,7 +45,7 @@ class TestParseFeature(TestCase):
         self.assertEqual(
             [feature.strip() for feature in features],
             ['Feature: Basic Tests',
-             'I want to exercise generation of a simple test from a feature.']
+             'I want to exercise generation of a simple test from a feature.'],
         )
 
         scenario = scenarios[0]
@@ -54,6 +53,5 @@ class TestParseFeature(TestCase):
                          'Scenario: I need to verify basic arithmetic.')
         self.assertEqual(
             [scen.strip() for scen in scenario[1]],
-            ['Given I add 1 and 1',
-             'Then the result should be 2']
+            ['Given I add 1 and 1', 'Then the result should be 2'],
         )

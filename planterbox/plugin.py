@@ -119,11 +119,11 @@ class Planterbox(Plugin):
         by_feature = normalize_names(names)
 
         for (
-            feature_package_name, feature_filename
+            feature_package_name, feature_filename,
         ), scenarios_to_run in sorted(by_feature.items()):
             feature_module = object_from_name(feature_package_name)[1]
             feature_path = os.path.join(
-                os.path.dirname(feature_module.__file__), feature_filename
+                os.path.dirname(feature_module.__file__), feature_filename,
             )
 
             suite = self.makeSuiteFromFeature(

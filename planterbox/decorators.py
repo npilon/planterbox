@@ -10,7 +10,6 @@ import re
 
 from six import (
     string_types,
-    text_type,
 )
 
 log = logging.getLogger('planterbox')
@@ -31,9 +30,8 @@ def make_step(pattern, multiline, fn):
         else:
             pattern = pattern + r'\n((?:.|\n)+)'
 
-    planterbox_patterns.append(re.compile(
-        planterbox_prefix + pattern, re.IGNORECASE
-    ))
+    planterbox_patterns.append(
+        re.compile(planterbox_prefix + pattern, re.IGNORECASE))
     fn.planterbox_patterns = planterbox_patterns
     return fn
 
