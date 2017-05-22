@@ -1,6 +1,9 @@
 planterbox
 ==========
 
+.. image:: https://api.travis-ci.org/npilon/planterbox.png?branch=master
+        :target: https://travis-ci.org/npilon/planterbox
+
 A plugin for running behavior-driven tests using
 `gherkin <https://github.com/cucumber/cucumber/wiki/Gherkin>`__ inside
 ``nose2``.
