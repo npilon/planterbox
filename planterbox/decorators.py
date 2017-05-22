@@ -8,6 +8,11 @@ from functools import partial
 import logging
 import re
 
+from six import (
+    string_types,
+    text_type,
+)
+
 log = logging.getLogger('planterbox')
 
 
@@ -21,7 +26,7 @@ def make_step(pattern, multiline, fn):
     planterbox_patterns = getattr(fn, 'planterbox_patterns', [])
 
     if multiline:
-        if isinstance(multiline, basestring):
+        if isinstance(multiline, string_types):
             pattern = pattern + r'\n(?P<{}>(?:.|\n)+)'.format(multiline)
         else:
             pattern = pattern + r'\n((?:.|\n)+)'

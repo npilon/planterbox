@@ -4,10 +4,6 @@ from collections import defaultdict
 import csv
 from datetime import datetime
 from functools import partial
-from itertools import (
-    ifilter,
-    ifilterfalse,
-)
 import logging
 import os
 import re
@@ -96,8 +92,10 @@ class Planterbox(Plugin):
 
     def loadTestsFromNames(self, event):
         is_feature = partial(FEATURE_NAME.search)
-        feature_names = list(ifilter(is_feature, event.names))
-        event.names = list(ifilterfalse(is_feature, event.names))
+        feature_names = [test_name for test_name in event.names if
+                         is_feature(test_name)]
+        event.names = [test_name for test_name in event.names if
+                       not is_feature(test_name)]
 
         test_suites = list(self._from_names(feature_names))
         if event.names:
@@ -122,7 +120,7 @@ class Planterbox(Plugin):
 
         for (
             feature_package_name, feature_filename
-        ), scenarios_to_run in sorted(by_feature.iteritems()):
+        ), scenarios_to_run in sorted(by_feature.items()):
             feature_module = object_from_name(feature_package_name)[1]
             feature_path = os.path.join(
                 os.path.dirname(feature_module.__file__), feature_filename
@@ -177,7 +175,7 @@ def resolve_scenarios(scenario_string):
         return []
 
     scenario_parser = csv.reader([scenario_string])
-    scenarios = scenario_parser.next()
+    scenarios = next(scenario_parser)
     scenarios = {
         int(s) if s.isdigit() else s for s in scenarios
     }

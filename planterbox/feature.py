@@ -1,12 +1,11 @@
 """TestCase subclass for executing the scenarios from a feature"""
 
-from cStringIO import StringIO
+from six.moves import (
+    cStringIO as StringIO,
+)
 import csv
 import codecs
 from importlib import import_module
-from itertools import (
-    izip,
-)
 import logging
 import os
 import re
@@ -20,6 +19,10 @@ from nose2.util import (
     exc_info_to_string,
 )
 
+from six import (
+    text_type,
+)
+
 from .exceptions import (
     HookFailedException,
     MixedStepParametersException,
@@ -28,6 +31,9 @@ from .exceptions import (
 )
 from .parsing import (
     parse_feature,
+)
+from .util import (
+    clean_dict_repr,
 )
 
 log = logging.getLogger('planterbox')
@@ -97,7 +103,7 @@ class FeatureTestCase(TestCase):
             example_data = example_row(example)
             yield {
                 label: datum for label, datum
-                in izip(example_header, example_data)
+                in zip(example_header, example_data)
             }
 
     def harvest_steps(self):
@@ -278,7 +284,8 @@ class FeatureTestCase(TestCase):
 
     def scenario_example_name(self, example):
         self.scenario_name = '{} <- {}'.format(
-            self.original_scenario_name, unicode(example).strip())
+            self.original_scenario_name, clean_dict_repr(example),
+        )
 
     def shortDescription(self):
         if getattr(self, 'scenario_name', None):
@@ -331,10 +338,10 @@ def substitute_steps(scenario, example):
         ]
     except KeyError as ke:
         raise UnmatchedSubstitutionException(
-            step,
+            ke.args[0],
             '"{key}" missing from outline example {example}'.format(
-                key=ke.message,
-                example=example,
+                key=ke.args[0],
+                example=clean_dict_repr(example),
             )
         )
 
@@ -358,7 +365,7 @@ def run_hook(tester, result, hook):
     except KeyboardInterrupt:
         raise
     except SkipTest as e:
-        result.addSkip(tester, unicode(e))
+        result.addSkip(tester, text_type(e))
         raise HookFailedException('Skipped')
     except Exception as e:
         result.addError(tester, sys.exc_info())

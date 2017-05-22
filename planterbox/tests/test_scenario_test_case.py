@@ -2,6 +2,10 @@ from unittest import TestCase
 
 from mock import Mock, patch
 
+from six import (
+    text_type,
+)
+
 
 class TestFeatureTestCase(TestCase):
     def tearDown(self):
@@ -51,7 +55,7 @@ class TestFeatureTestCase(TestCase):
         self.assertEqual(
             formatted_lines[-2], 'AssertionError: Expected Failure')
         self.assertEqual(
-            unicode(test_case), 'A Test Feature (mock:foobar.feature)')
+            text_type(test_case), 'A Test Feature (mock:foobar.feature)')
 
     def test_outline_error(self):
         from planterbox.feature import FeatureTestCase
@@ -91,12 +95,12 @@ class TestFeatureTestCase(TestCase):
 
         self.assertEqual(
             formatted_lines[0],
-            "Scenario: A Test Scenario <- {'y': '1', 'x': '1', 'z': '2'}"
+            "Scenario: A Test Scenario <- {'x': '1', 'y': '1', 'z': '2'}"
         )
-        self.assertEqual(
-            formatted_lines[-2],
+        self.assertIn(
             """UnmatchedSubstitutionException: "undefined" missing from \
-outline example {'y': '1', 'x': '1', 'z': '2'}"""
+outline example {'x': '1', 'y': '1', 'z': '2'}""",
+            formatted_lines[-2],
         )
 
     def test_specific_scenario_index(self):
