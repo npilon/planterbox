@@ -226,7 +226,7 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
             return_value=None,
         )
         mock_world.__name__ = 'mock'
-        mock_world.test_thing =  step(r'I test a thing')(Mock(
+        mock_world.test_thing = step(r'I test a thing')(Mock(
             planterbox_patterns=[]
         ))
         mock_world.fail_test = fail_test
@@ -282,7 +282,7 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
             return_value=None,
         )
         mock_world.__name__ = 'mock'
-        mock_world.test_thing =  step(r'I test a thing')(Mock(
+        mock_world.test_thing = step(r'I test a thing')(Mock(
             planterbox_patterns=[]
         ))
         mock_world.fail_test = fail_test
