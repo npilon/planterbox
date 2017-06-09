@@ -4,8 +4,8 @@ from six.moves import (
     cStringIO as StringIO,
 )
 import csv
-import codecs
 from importlib import import_module
+import io
 import logging
 import os
 import re
@@ -69,7 +69,7 @@ class FeatureTestCase(TestCase):
         self.config = config
 
         if feature_text is None:
-            with codecs.open(feature_path, mode='r', encoding='utf-8') as f:
+            with io.open(feature_path, mode='r', encoding='utf-8') as f:
                 feature_text = f.read()
 
         header_text, self.scenarios = parse_feature(feature_text)
