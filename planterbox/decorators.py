@@ -26,9 +26,9 @@ def make_step(pattern, multiline, fn):
 
     if multiline:
         if isinstance(multiline, string_types):
-            pattern = pattern + r'[\n\r](?P<{}>(?:.|[\n\r])+)'.format(multiline)
+            pattern = pattern + r'\n(?P<{}>(?:.|\n)+)'.format(multiline)
         else:
-            pattern = pattern + r'[\n\r]((?:.|[\n\r])+)'
+            pattern = pattern + r'\n((?:.|\n)+)'
 
     planterbox_patterns.append(
         re.compile(planterbox_prefix + pattern, re.IGNORECASE))
