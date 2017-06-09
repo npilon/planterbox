@@ -30,7 +30,6 @@ def make_step(pattern, multiline, fn):
         else:
             pattern = pattern + r'[\n\r]((?:.|[\n\r])+)'
 
-    pattern = re.sub(r'\$$', '\r?$', pattern)
     planterbox_patterns.append(
         re.compile(planterbox_prefix + pattern, re.IGNORECASE))
     fn.planterbox_patterns = planterbox_patterns
