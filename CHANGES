@@ -1,3 +1,8 @@
+0.6.4
+=====
+
+- Use io.open for universal newline support
+
 0.6.3
 =====
 
