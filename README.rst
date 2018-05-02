@@ -112,6 +112,9 @@ be ``'before'`` or ``'after'`` and ``STAGE`` any of ``'feature'``,
 All hooks are expected to take one argument: the ``TestCase`` subclass
 for the active feature.
 
+As with steps, hooks must be directly present in the feature's
+``__init__.py`` in order to be run.
+
 Scenario Outlines
 -----------------
 
