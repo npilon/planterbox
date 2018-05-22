@@ -38,7 +38,7 @@ class PlanterboxSummary(Plugin):
             sorted(
                 reportable_results,
                 key=(lambda r: (
-                    r.test.feature_id,
+                    r.test.feature_id(),
                     r.exc_info.scenario_index,
                 )),
             ),
