@@ -12,9 +12,14 @@ requires = [
 
 description = 'A plugin for nose2 implementing behavior-driven testing.'
 
+with open("README.rst", "r") as readme:
+    long_description = readme.read()
+
+
 setup(name='planterbox',
-      version='0.6.5',
+      version='0.6.6',
       description=description,
+      long_description=long_description,
       license='MIT',
       classifiers=[
           "Intended Audience :: Developers",
