@@ -77,6 +77,8 @@ class FeatureTestCase(TestCase):
             'Feature:', '',
         ).strip()
         self.feature_doc = [doc.strip() for doc in header_text[1:]]
+        self.step_inventory = list(self.harvest_steps())
+        self.check_scenarios()
 
     def id(self):
         if self.scenarios_to_run:
@@ -98,8 +100,8 @@ class FeatureTestCase(TestCase):
         if not examples:
             return
 
-        example_header = example_row(examples.pop(0))
-        for example in examples:
+        example_header = example_row(examples[0])
+        for example in examples[1:]:
             example_data = example_row(example)
             yield {
                 label: datum for label, datum
@@ -139,7 +141,6 @@ class FeatureTestCase(TestCase):
         module = import_module(self.__module__)
         try:
             run_hooks(module, self, result, 'before', 'feature')
-            self.step_inventory = list(self.harvest_steps())
             try:
                 for i, scenario in enumerate(self.scenarios):
                     if (
@@ -147,13 +148,11 @@ class FeatureTestCase(TestCase):
                         not self.should_run_scenario(i, scenario)
                     ):
                         continue
-
                     (
                         self.scenario_name,
                         scenario_steps,
                         scenario_examples,
                     ) = scenario
-
                     if scenario_examples:
                         scenario_examples = list(
                             self.load_examples(scenario_examples))
@@ -161,7 +160,6 @@ class FeatureTestCase(TestCase):
                         self.scenario_example_name(scenario_examples[0])
 
                     result.startTest(self)
-
                     try:
                         if scenario_examples:
                             self.run_outline(
@@ -201,6 +199,42 @@ class FeatureTestCase(TestCase):
             no_trailing_period in self.scenarios_to_run or
             i in self.scenarios_to_run
         )
+
+
+    def check_scenarios(self):
+# Laura's code: Does not work with Examples
+        for scenario in (self.scenarios):
+            (
+                self.scenario_name,
+                scenario_steps,
+                scenario_examples,
+            ) = scenario
+            if scenario_examples:
+                # Do the example thing
+                unmatched = []
+                scenario_examples = list(self.load_examples(scenario_examples))
+                for scenario_example in scenario_examples:
+                    substituted_scenario = substitute_steps(scenario_steps, scenario_example)
+                    unmatched.extend(self.check_steps(substituted_scenario))
+            else:
+                unmatched = self.check_steps(scenario_steps)
+
+            if len(unmatched) > 0:
+                for step in unmatched:
+                    logging.warning("Unmatched steps {}".format(step))
+                raise UnmatchedStepException()
+
+
+    def check_steps(self, scenario_steps):
+        unmatched = []
+        for step in scenario_steps:
+            try:
+                step_fn, step_arguments = self.match_step(step)
+            except UnmatchedStepException:
+                pass
+                unmatched.append(step)
+        return unmatched
+
 
     def run_scenario(self, module, index, scenario, result):
         completed_steps = []
