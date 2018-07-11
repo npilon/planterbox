@@ -220,7 +220,6 @@ class FeatureTestCase(TestCase):
                     unmatched.extend(self.check_steps(substituted_scenario))
             else:
                 unmatched = self.check_steps(scenario_steps)
-
             if len(unmatched) > 0:
                 for step in unmatched:
                     logging.warning("Unmatched steps {}".format(step))
@@ -231,7 +230,7 @@ class FeatureTestCase(TestCase):
         unmatched = []
         for step in scenario_steps:
             try:
-                step_fn, step_arguments = self.match_step(step)
+                self.match_step(step)
             except UnmatchedStepException:
                 pass
                 unmatched.append(step)
