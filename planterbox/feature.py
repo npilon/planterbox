@@ -210,7 +210,6 @@ class FeatureTestCase(TestCase):
                 scenario_steps,
                 scenario_examples,
             ) = scenario
-
             if scenario_examples:
                 # Do the example thing
                 unmatched = []
@@ -225,12 +224,14 @@ class FeatureTestCase(TestCase):
                     key=ke.args[0],
                     example=clean_dict_repr(scenario_example),
                     )
+                    logging.warning(ke)
             else:
                 unmatched = self.check_steps(scenario_steps)
             if len(unmatched) > 0:
                 for step in unmatched:
                     logging.warning("Unmatched steps {}".format(step))
                 raise UnmatchedStepException()
+
 
 
     def check_steps(self, scenario_steps):
