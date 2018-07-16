@@ -111,6 +111,7 @@ class FeatureTestCase(TestCase):
     def harvest_steps(self):
         """Find all steps that have been imported into this feature's module"""
         module = import_module(self.__module__)
+
         return [
             maybe_step for maybe_step
             in [getattr(module, name) for name in dir(module)]
@@ -214,9 +215,16 @@ class FeatureTestCase(TestCase):
                 # Do the example thing
                 unmatched = []
                 scenario_examples = list(self.load_examples(scenario_examples))
-                for scenario_example in scenario_examples:
-                    substituted_scenario = substitute_steps(scenario_steps, scenario_example)
-                    unmatched.extend(self.check_steps(substituted_scenario))
+                try:
+                    for scenario_example in scenario_examples:
+                        substituted_scenario = substitute_steps(scenario_steps, scenario_example)
+                        unmatched.extend(self.check_steps(substituted_scenario))
+                except UnmatchedSubstitutionException as ke:
+                    ke.args[0],
+                    '"{key}" missing from outline example {example}'.format(
+                    key=ke.args[0],
+                    example=clean_dict_repr(scenario_example),
+                    )
             else:
                 unmatched = self.check_steps(scenario_steps)
             if len(unmatched) > 0:
