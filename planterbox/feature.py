@@ -78,8 +78,7 @@ class FeatureTestCase(TestCase):
         ).strip()
         self.feature_doc = [doc.strip() for doc in header_text[1:]]
         self.step_inventory = list(self.harvest_steps())
-        if not feature_path == 'foobar.feature':
-            self.check_scenarios()
+        self.check_scenarios()
 
     def id(self):
         if self.scenarios_to_run:
@@ -232,8 +231,7 @@ class FeatureTestCase(TestCase):
             try:
                 self.match_step(step)
             except UnmatchedStepException:
-                pass
-                unmatched.append(step)
+                 unmatched.append(step)
         return unmatched
 
 
