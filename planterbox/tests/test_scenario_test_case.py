@@ -79,12 +79,12 @@ class TestFeatureTestCase(TestCase):
         def mock_addError(result, exc):
             self.exc_info = exc
 
-        mock_result = Mock(addError=Mock(side_effect=mock_addError))
+        Mock(addError=Mock(side_effect=mock_addError))
 
         try:
             with patch('planterbox.feature.import_module',
                     Mock(return_value=mock_world)):
-                test_case = FeatureTestCase(
+                FeatureTestCase(
                 feature_path='foobar.feature',
                 feature_text=test_feature,
                 )
@@ -97,8 +97,7 @@ class TestFeatureTestCase(TestCase):
                 "{'x': '1', 'y': '1', 'z': '2'}",
                 str(e.args[0]),
             )
-#        test_case.__module__ = 'mock'
-#        test_case.run(mock_result)
+
 
     def test_specific_scenario_index(self):
         from planterbox.feature import FeatureTestCase
