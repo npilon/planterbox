@@ -6,6 +6,7 @@ from six import (
     text_type,
 )
 
+from planterbox.exceptions import UnmatchedStepException
 
 class TestFeatureTestCase(TestCase):
     def tearDown(self):
@@ -80,28 +81,24 @@ class TestFeatureTestCase(TestCase):
 
         mock_result = Mock(addError=Mock(side_effect=mock_addError))
 
-        with patch('planterbox.feature.import_module',
-                   Mock(return_value=mock_world)):
-            test_case = FeatureTestCase(
-            feature_path='foobar.feature',
-            feature_text=test_feature,
+        try:
+            with patch('planterbox.feature.import_module',
+                    Mock(return_value=mock_world)):
+                test_case = FeatureTestCase(
+                feature_path='foobar.feature',
+                feature_text=test_feature,
+                )
+        except UnmatchedStepException as e:
+            self.assertIn(
+                '"undefined" missing from outline example',
+                str(e.args[0]),
             )
-            test_case.__module__ = 'mock'
-            test_case.run(mock_result)
-
-        formatted = test_case.formatTraceback(self.exc_info)
-
-        formatted_lines = formatted.split('\n')
-
-        self.assertEqual(
-            formatted_lines[0],
-            "Scenario: A Test Scenario <- {'x': '1', 'y': '1', 'z': '2'}",
-        )
-        self.assertIn(
-            """UnmatchedSubstitutionException: "undefined" missing from \
-outline example {'x': '1', 'y': '1', 'z': '2'}""",
-            formatted_lines[-2],
-        )
+            self.assertIn(
+                "{'x': '1', 'y': '1', 'z': '2'}",
+                str(e.args[0]),
+            )
+#        test_case.__module__ = 'mock'
+#        test_case.run(mock_result)
 
     def test_specific_scenario_index(self):
         from planterbox.feature import FeatureTestCase

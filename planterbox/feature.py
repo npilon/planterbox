@@ -204,6 +204,7 @@ class FeatureTestCase(TestCase):
 
     def check_scenarios(self):
         ''' Verify scenario steps match defined steps'''
+        err_msg = ''
         for scenario in (self.scenarios):
             (
                 self.scenario_name,
@@ -219,19 +220,19 @@ class FeatureTestCase(TestCase):
                         substituted_scenario = substitute_steps(scenario_steps, scenario_example)
                         unmatched.extend(self.check_steps(substituted_scenario))
                 except UnmatchedSubstitutionException as ke:
-                    ke.args[0],
-                    '"{key}" missing from outline example {example}'.format(
-                    key=ke.args[0],
-                    example=clean_dict_repr(scenario_example),
-                    )
-                    logging.warning(ke)
+#                    ke.args[0],
+#                    '"{key}" missing from outline example {example}'.format(
+#                    key=ke.args[0],
+#                    example=clean_dict_repr(scenario_example),
+#                    )
+                    raise UnmatchedStepException(ke.args[0])
             else:
                 unmatched = self.check_steps(scenario_steps)
             if len(unmatched) > 0:
-                for step in unmatched:
-                    logging.warning("Unmatched steps {}".format(step))
-                raise UnmatchedStepException()
-
+                # combine all unmatched steps into one string and raise exception with it
+                err_msg = '\n'.join(unmatched) + err_msg
+            if err_msg:
+                raise UnmatchedStepException("Unmatched steps:\n " + err_msg)
 
 
     def check_steps(self, scenario_steps):
