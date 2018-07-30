@@ -83,10 +83,10 @@ class TestFeatureTestCase(TestCase):
 
         try:
             with patch('planterbox.feature.import_module',
-                    Mock(return_value=mock_world)):
+                       Mock(return_value=mock_world)):
                 FeatureTestCase(
-                feature_path='foobar.feature',
-                feature_text=test_feature,
+                    feature_path='foobar.feature',
+                    feature_text=test_feature,
                 )
         except UnmatchedStepException as e:
             self.assertIn(
