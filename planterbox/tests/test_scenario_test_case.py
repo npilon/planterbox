@@ -6,6 +6,7 @@ from six import (
     text_type,
 )
 
+from planterbox.exceptions import UnmatchedStepException
 
 class TestFeatureTestCase(TestCase):
     def tearDown(self):
@@ -31,11 +32,6 @@ class TestFeatureTestCase(TestCase):
         mock_world.__name__ = 'mock'
         mock_world.fail_test = fail_test
 
-        test_case = FeatureTestCase(
-            feature_path='foobar.feature',
-            feature_text=test_feature,
-        )
-        test_case.__module__ = 'mock'
 
         def mock_addFailure(result, exc):
             self.exc_info = exc
@@ -44,6 +40,11 @@ class TestFeatureTestCase(TestCase):
 
         with patch('planterbox.feature.import_module',
                    Mock(return_value=mock_world)):
+            test_case = FeatureTestCase(
+                feature_path='foobar.feature',
+                feature_text=test_feature,
+            )
+            test_case.__module__ = 'mock'
             test_case.run(mock_result)
 
         formatted = test_case.formatTraceback(self.exc_info)
@@ -74,34 +75,29 @@ class TestFeatureTestCase(TestCase):
         )
         mock_world.__name__ = 'mock'
 
-        test_case = FeatureTestCase(
-            feature_path='foobar.feature',
-            feature_text=test_feature,
-        )
-        test_case.__module__ = 'mock'
 
         def mock_addError(result, exc):
             self.exc_info = exc
 
-        mock_result = Mock(addError=Mock(side_effect=mock_addError))
+        Mock(addError=Mock(side_effect=mock_addError))
 
-        with patch('planterbox.feature.import_module',
-                   Mock(return_value=mock_world)):
-            test_case.run(mock_result)
+        try:
+            with patch('planterbox.feature.import_module',
+                    Mock(return_value=mock_world)):
+                FeatureTestCase(
+                feature_path='foobar.feature',
+                feature_text=test_feature,
+                )
+        except UnmatchedStepException as e:
+            self.assertIn(
+                '"undefined" missing from outline example',
+                str(e.args[0]),
+            )
+            self.assertIn(
+                "{'x': '1', 'y': '1', 'z': '2'}",
+                str(e.args[0]),
+            )
 
-        formatted = test_case.formatTraceback(self.exc_info)
-
-        formatted_lines = formatted.split('\n')
-
-        self.assertEqual(
-            formatted_lines[0],
-            "Scenario: A Test Scenario <- {'x': '1', 'y': '1', 'z': '2'}",
-        )
-        self.assertIn(
-            """UnmatchedSubstitutionException: "undefined" missing from \
-outline example {'x': '1', 'y': '1', 'z': '2'}""",
-            formatted_lines[-2],
-        )
 
     def test_specific_scenario_index(self):
         from planterbox.feature import FeatureTestCase
@@ -129,12 +125,6 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
         ))
         mock_world.fail_test = fail_test
 
-        test_case = FeatureTestCase(
-            feature_path='foobar.feature',
-            feature_text=test_feature,
-            scenarios_to_run=[1],
-        )
-        test_case.__module__ = 'mock'
 
         def mock_addFailure(result, exc):
             self.exc_info = exc
@@ -143,6 +133,12 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
 
         with patch('planterbox.feature.import_module',
                    Mock(return_value=mock_world)):
+            test_case = FeatureTestCase(
+                feature_path='foobar.feature',
+                feature_text=test_feature,
+                scenarios_to_run=[1],
+            )
+            test_case.__module__ = 'mock'
             test_case.run(mock_result)
 
         if hasattr(self, 'exc_info'):
@@ -178,12 +174,6 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
         ))
         mock_world.fail_test = fail_test
 
-        test_case = FeatureTestCase(
-            feature_path='foobar.feature',
-            feature_text=test_feature,
-            scenarios_to_run=['A Test Scenario'],
-        )
-        test_case.__module__ = 'mock'
 
         def mock_addFailure(result, exc):
             self.exc_info = exc
@@ -192,6 +182,12 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
 
         with patch('planterbox.feature.import_module',
                    Mock(return_value=mock_world)):
+            test_case = FeatureTestCase(
+                feature_path='foobar.feature',
+                feature_text=test_feature,
+                scenarios_to_run=['A Test Scenario'],
+            )
+            test_case.__module__ = 'mock'
             test_case.run(mock_result)
 
         if hasattr(self, 'exc_info'):
@@ -231,12 +227,6 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
         ))
         mock_world.fail_test = fail_test
 
-        test_case = FeatureTestCase(
-            feature_path='foobar.feature',
-            feature_text=test_feature,
-            scenarios_to_run=['A Test Scenario'],
-        )
-        test_case.__module__ = 'mock'
 
         def mock_addFailure(result, exc):
             self.exc_info = exc
@@ -245,6 +235,12 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
 
         with patch('planterbox.feature.import_module',
                    Mock(return_value=mock_world)):
+            test_case = FeatureTestCase(
+                feature_path='foobar.feature',
+                feature_text=test_feature,
+                scenarios_to_run=['A Test Scenario'],
+            )
+            test_case.__module__ = 'mock'
             test_case.run(mock_result)
 
         if hasattr(self, 'exc_info'):
@@ -287,12 +283,6 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
         ))
         mock_world.fail_test = fail_test
 
-        test_case = FeatureTestCase(
-            feature_path='foobar.feature',
-            feature_text=test_feature,
-            scenarios_to_run=['A Test Scenario'],
-        )
-        test_case.__module__ = 'mock'
 
         def mock_addFailure(result, exc):
             self.exc_info = exc
@@ -301,6 +291,12 @@ outline example {'x': '1', 'y': '1', 'z': '2'}""",
 
         with patch('planterbox.feature.import_module',
                    Mock(return_value=mock_world)):
+            test_case = FeatureTestCase(
+               feature_path='foobar.feature',
+                feature_text=test_feature,
+                scenarios_to_run=['A Test Scenario'],
+            )
+            test_case.__module__ = 'mock'
             test_case.run(mock_result)
 
         if hasattr(self, 'exc_info'):
