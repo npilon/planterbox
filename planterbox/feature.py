@@ -201,7 +201,6 @@ class FeatureTestCase(TestCase):
             i in self.scenarios_to_run
         )
 
-
     def check_scenarios(self):
         ''' Verify scenario steps match defined steps'''
         for scenario in (self.scenarios):
@@ -227,16 +226,14 @@ class FeatureTestCase(TestCase):
                 # combine all unmatched steps into one string and raise exception with it
                 raise UnmatchedStepException("Unmatched steps:\n" + '\n'.join(unmatched))
 
-
     def check_steps(self, scenario_steps):
         unmatched = []
         for step in scenario_steps:
             try:
                 self.match_step(step)
             except UnmatchedStepException:
-                 unmatched.append(step)
+                unmatched.append(step)
         return unmatched
-
 
     def run_scenario(self, module, index, scenario, result):
         completed_steps = []
@@ -275,7 +272,7 @@ class FeatureTestCase(TestCase):
             del self.exc_info
         except SkipTest as e:
             result.addSkip(self, str(e))
-        except:
+        except Exception:
             self.exc_info = FeatureExcInfo.from_exc_info(
                 sys.exc_info(),
                 scenario_index=index,

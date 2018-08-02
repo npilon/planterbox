@@ -79,7 +79,7 @@ class Planterbox(Plugin):
             feature_package_name = name_from_path(
                 os.path.dirname(feature_path))[0]
             feature_module = object_from_name(feature_package_name)[1]
-        except:
+        except Exception:
             return event.loader.failedImport(feature_path)
 
         return self.makeSuiteFromFeature(
