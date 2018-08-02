@@ -131,6 +131,7 @@ class TestPlanterboxPlugin(unittest.TestCase):
             makeSuiteFromFeature=mock.DEFAULT,
             # Short-circuit nose2 attempting to register this instance
             addOption=mock.DEFAULT,
+            addFlag=mock.DEFAULT,
         )
         patched_plugin = plugin_patcher.start()
         self.addCleanup(plugin_patcher.stop)
@@ -356,3 +357,41 @@ class TestPlanterboxPlugin(unittest.TestCase):
         self.assertFalse(mock_event.handled)
         self.assertEqual(len(mock_event.extraTests), 2)
         self.assertEqual(mock_event.names, ['planterbox.tests.test_plugin'])
+
+
+class TestPlanterboxPluginFlags(unittest.TestCase):
+    def setUp(self):
+        plugin_patcher = mock.patch.multiple(
+            'planterbox.plugin.Planterbox',
+            # Short-circuit nose2 attempting to register this instance
+            addOption=mock.DEFAULT,
+            addFlag=mock.DEFAULT,
+        )
+        patched_plugin = plugin_patcher.start()
+        self.addCleanup(plugin_patcher.stop)
+        self.pp = Planterbox()
+
+    def testNoCheckOnly(self):
+        mock_event = mock.Mock()
+        mock_event.configure_mock(
+            name='planterbox.tests.test_feature:basic.feature',
+        )
+        suite = self.pp.loadTestsFromName(mock_event)
+        self.assertEqual(len(suite._tests), 1)
+        test = suite._tests[0]
+        self.assertEqual(
+            test.feature_path,
+            os.path.join(
+                os.path.dirname(__file__),
+                'test_feature/basic.feature',
+            ),
+        )
+
+    def testCheckOnly(self):
+        mock_event = mock.Mock()
+        mock_event.configure_mock(
+            name='planterbox.tests.test_feature:basic.feature',
+        )
+        self.pp.setCheckOnly(None)
+        suite = self.pp.loadTestsFromName(mock_event)
+        self.assertEqual(len(suite._tests), 0)

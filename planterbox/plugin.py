@@ -35,9 +35,17 @@ class Planterbox(Plugin):
     configSection = 'planterbox'
     commandLineSwitch = (None, 'with-planterbox',
                          'Load tests from .feature files')
+    checkOnly = False
 
     def register(self):
         super(Planterbox, self).register()
+
+        self.addFlag(
+            self.setCheckOnly, None, 'planterbox-check-only',
+            help_text="""Only check the validity of feature steps.
+            Don't run planterbox tests.""",
+        )
+
         if 'start_time' not in self.config._mvd:
 
             start_datetime = datetime.now()
@@ -51,21 +59,32 @@ class Planterbox(Plugin):
             self.config._items.append(('start_time',
                                        start_datetime.strftime("%H_%M_%S")))
 
+    def setCheckOnly(self, *args):
+        self.checkOnly = True
+
     def makeSuiteFromFeature(self, module, feature_path,
                              scenarios_to_run=None):
         MyTestSuite = transplant_class(TestSuite, module.__name__)
 
         MyFeatureTestCase = transplant_class(FeatureTestCase, module.__name__)
 
-        return MyTestSuite(
-            tests=[
-                MyFeatureTestCase(
-                    feature_path=feature_path,
-                    scenarios_to_run=scenarios_to_run,
-                    config=self.config,
-                ),
-            ],
-        )
+        if self.checkOnly:
+            MyFeatureTestCase(
+                feature_path=feature_path,
+                scenarios_to_run=scenarios_to_run,
+                config=self.config,
+            )
+            return MyTestSuite(tests=[])
+        else:
+            return MyTestSuite(
+                tests=[
+                    MyFeatureTestCase(
+                        feature_path=feature_path,
+                        scenarios_to_run=scenarios_to_run,
+                        config=self.config,
+                    ),
+                ],
+            )
 
     def handleFile(self, event):
         """Produce a FeatureTestSuite from a .feature file."""
