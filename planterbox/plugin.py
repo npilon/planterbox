@@ -37,14 +37,17 @@ class Planterbox(Plugin):
                          'Load tests from .feature files')
     checkOnly = False
 
-    def register(self):
-        super(Planterbox, self).register()
+    def __init__(self):
+        super(Plugin, self).__init__()
 
         self.addFlag(
             self.setCheckOnly, None, 'planterbox-check-only',
             help_text="""Only check the validity of feature steps.
             Don't run planterbox tests.""",
         )
+
+    def register(self):
+        super(Planterbox, self).register()
 
         if 'start_time' not in self.config._mvd:
 
