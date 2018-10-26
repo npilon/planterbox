@@ -49,8 +49,8 @@ class Planterbox(Plugin):
 
         self.addOption(
             self.tag_list, None, 'tag',
-            help_text="""tag allows scenarios to contain metadata
-            eg tag feature=abc.""",
+            help_text="""tag allows selective running of scenarios
+            eg tag=abc.""",
             nargs=1
         )
 
