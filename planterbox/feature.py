@@ -62,11 +62,12 @@ class FeatureTestCase(TestCase):
     """A test case generated from the scenarios in a feature file."""
 
     def __init__(self, feature_path, scenarios_to_run=None, feature_text=None,
-                 config=None):
+                 config=None, tag_list=[]):
         super(FeatureTestCase, self).__init__('nota')
         self.feature_path = feature_path
         self.scenarios_to_run = scenarios_to_run
         self.config = config
+        self.tag_list = tag_list
 
         if feature_text is None:
             with io.open(feature_path, mode='r', encoding='utf-8') as f:
@@ -79,6 +80,7 @@ class FeatureTestCase(TestCase):
         self.feature_doc = [doc.strip() for doc in header_text[1:]]
         self.step_inventory = list(self.harvest_steps())
         self.check_scenarios()
+
 
     def id(self):
         if self.scenarios_to_run:
@@ -144,6 +146,10 @@ class FeatureTestCase(TestCase):
             run_hooks(module, self, result, 'before', 'feature')
             try:
                 for i, scenario in enumerate(self.scenarios):
+
+                    if not matches_tag(scenario[0], self.tag_list):
+                        continue
+
                     if (
                         self.scenarios_to_run and
                         not self.should_run_scenario(i, scenario)
@@ -154,6 +160,10 @@ class FeatureTestCase(TestCase):
                         scenario_steps,
                         scenario_examples,
                     ) = scenario
+
+                    import code
+                    code.interact(local=dict(globals(), **locals()))
+
                     if scenario_examples:
                         scenario_examples = list(
                             self.load_examples(scenario_examples))
@@ -402,3 +412,13 @@ def run_hook(tester, result, hook):
     except Exception as e:
         result.addError(tester, sys.exc_info())
         raise HookFailedException('Error')
+
+
+def matches_tag(scenario, tag_list):
+    if len(tag_list) != 0:
+        if "tag=" not in scenario:
+            return False
+        else:
+            if scenario.split('tag=')[1] not in tag_list:
+                return False
+    return True

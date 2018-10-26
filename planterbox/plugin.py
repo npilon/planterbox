@@ -36,6 +36,7 @@ class Planterbox(Plugin):
     commandLineSwitch = (None, 'with-planterbox',
                          'Load tests from .feature files')
     checkOnly = False
+    tag_list=[]
 
     def register(self):
         super(Planterbox, self).register()
@@ -44,6 +45,13 @@ class Planterbox(Plugin):
             self.setCheckOnly, None, 'planterbox-check-only',
             help_text="""Only check the validity of feature steps.
             Don't run planterbox tests.""",
+        )
+
+        self.addOption(
+            self.tag_list, None, 'tag',
+            help_text="""tag allows scenarios to contain metadata
+            eg tag feature=abc.""",
+            nargs=1
         )
 
         if 'start_time' not in self.config._mvd:
@@ -61,6 +69,7 @@ class Planterbox(Plugin):
 
     def setCheckOnly(self, *args):
         self.checkOnly = True
+
 
     def makeSuiteFromFeature(self, module, feature_path,
                              scenarios_to_run=None):
@@ -82,6 +91,7 @@ class Planterbox(Plugin):
                         feature_path=feature_path,
                         scenarios_to_run=scenarios_to_run,
                         config=self.config,
+                        tag_list=self.tag_list,
                     ),
                 ],
             )
