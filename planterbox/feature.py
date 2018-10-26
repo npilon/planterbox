@@ -161,9 +161,6 @@ class FeatureTestCase(TestCase):
                         scenario_examples,
                     ) = scenario
 
-                    import code
-                    code.interact(local=dict(globals(), **locals()))
-
                     if scenario_examples:
                         scenario_examples = list(
                             self.load_examples(scenario_examples))
