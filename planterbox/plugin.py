@@ -50,7 +50,7 @@ class Planterbox(Plugin):
         self.addOption(
             self.tag_list, None, 'tag',
             help_text="""tag allows selective running of scenarios
-            eg tag=abc.""",
+            Examples: tag=abc or tag=abc,def""",
             nargs=1
         )
 

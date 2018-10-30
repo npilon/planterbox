@@ -67,7 +67,6 @@ class FeatureTestCase(TestCase):
         self.feature_path = feature_path
         self.scenarios_to_run = scenarios_to_run
         self.config = config
-        self.tag_list = tag_list
 
         if feature_text is None:
             with io.open(feature_path, mode='r', encoding='utf-8') as f:
@@ -80,6 +79,7 @@ class FeatureTestCase(TestCase):
         self.feature_doc = [doc.strip() for doc in header_text[1:]]
         self.step_inventory = list(self.harvest_steps())
         self.check_scenarios()
+        self.tag_list = check_tag_list(tag_list)
 
 
     def id(self):
@@ -412,6 +412,8 @@ def run_hook(tester, result, hook):
 
 
 def matches_tag(scenario, tag_list):
+    ''' Returns True if a Scenario_tag matches one given on the command line,
+    False otherwise.'''
     if len(tag_list) != 0:
         number_of_tags = scenario.count('tag=')
         scenario_tags = list(scenario.split('tag='))
@@ -421,3 +423,11 @@ def matches_tag(scenario, tag_list):
         return False
     else:
         return True
+
+
+def check_tag_list(tag_list):
+    ''' Makes a list of any tags entered on the command line. '''
+    tags = []
+    if len(tag_list) !=0:
+        tags = tag_list[0].split(',')
+    return tags
