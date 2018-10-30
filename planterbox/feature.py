@@ -413,9 +413,11 @@ def run_hook(tester, result, hook):
 
 def matches_tag(scenario, tag_list):
     if len(tag_list) != 0:
-        if "tag=" not in scenario:
-            return False
-        else:
-            if scenario.split('tag=')[1] not in tag_list:
-                return False
-    return True
+        number_of_tags = scenario.count('tag=')
+        scenario_tags = list(scenario.split('tag='))
+        for tag in range(1, number_of_tags + 1):
+            if scenario_tags[tag] in tag_list:
+                return True
+        return False
+    else:
+        return True

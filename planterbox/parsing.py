@@ -64,6 +64,11 @@ def parse_feature(feature_text):
         if skipline(line):
             continue
 
+# if Scenario_tag= is in the line, then append it to the end of the scenario line
+        if line.strip().startswith ('Scenario_tag='):
+            scenario[0] += 'tag=' + (line.split('Scenario_tag=')[1])
+            continue
+
         if scenario is not None:
             if in_multiline:
                 if line.strip() == '"""':
