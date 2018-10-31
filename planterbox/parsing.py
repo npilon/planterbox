@@ -91,8 +91,10 @@ def parse_feature(feature_text):
                 append_index = 2
             else:
                 if starts_scenario_tag(line):
+#                    scenario[scenario_tag_index] += list(
+#                        filter(None, (line.replace(' ','').split('Scenario_tag:'))))
                     scenario[scenario_tag_index] += list(
-                        filter(None, (line.replace(' ','').split('Scenario_tag:'))))
+                        line.replace(' ','').split('Scenario_tag:')[1].split(','))
                     continue
                 else:
                     scenario[append_index].append(line)
