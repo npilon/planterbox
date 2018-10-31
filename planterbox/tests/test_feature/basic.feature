@@ -3,8 +3,8 @@ Feature: Basic Tests
 
 
     Scenario: I need to verify basic arithmetic.
-    Scenario_tag=math
-    Scenario_tag=math1
+        Scenario_tag: math
+        Scenario_tag: math1
         Given I add 1 and 1
         Then the result should be 2
 

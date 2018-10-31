@@ -147,7 +147,14 @@ class FeatureTestCase(TestCase):
             try:
                 for i, scenario in enumerate(self.scenarios):
 
-                    if not matches_tag(scenario[0], self.tag_list):
+                    (
+                        self.scenario_name,
+                        scenario_steps,
+                        scenario_examples,
+                        scenario_tags,
+                    ) = scenario
+
+                    if not matches_tag(scenario_tags, self.tag_list):
                         continue
 
                     if (
@@ -155,11 +162,13 @@ class FeatureTestCase(TestCase):
                         not self.should_run_scenario(i, scenario)
                     ):
                         continue
-                    (
-                        self.scenario_name,
-                        scenario_steps,
-                        scenario_examples,
-                    ) = scenario
+
+#                    (
+#                        self.scenario_name,
+#                        scenario_steps,
+#                        scenario_examples,
+#                        scenario_tags,
+#                    ) = scenario
 
                     if scenario_examples:
                         scenario_examples = list(
@@ -215,6 +224,7 @@ class FeatureTestCase(TestCase):
                 self.scenario_name,
                 scenario_steps,
                 scenario_examples,
+                scenario_tags,
             ) = scenario
             if scenario_examples:
                 # Do the example thing
@@ -411,18 +421,13 @@ def run_hook(tester, result, hook):
         raise HookFailedException('Error')
 
 
-def matches_tag(scenario, tag_list):
-    ''' Returns True if a Scenario_tag matches one given on the command line,
-    False otherwise.'''
-    if len(tag_list) != 0:
-        number_of_tags = scenario.count('tag=')
-        scenario_tags = list(scenario.split('tag='))
-        for tag in range(1, number_of_tags + 1):
-            if scenario_tags[tag] in tag_list:
-                return True
-        return False
-    else:
+def matches_tag(scenario_tags, tag_list):
+    ''' If tags indicated on command line, returns True if a Scenario_tag matches
+    one given on the command line'''
+    if len(tag_list) == 0:
         return True
+    else:
+        return not set(scenario_tags).isdisjoint(tag_list)
 
 
 def check_tag_list(tag_list):
