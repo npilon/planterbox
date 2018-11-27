@@ -5,7 +5,7 @@ import re
 
 INDENT = re.compile(r'^\s+')
 SCENARIO = re.compile(r'^\s+Scenario(?: Outline)?:')
-SCENARIO_TAG = re.compile(r'^\s+Scenario_tag:')
+SCENARIO_TAG = re.compile(r'^\s+Scenario Tag:')
 EXAMPLES = re.compile(r'^\s+Examples:')
 
 
@@ -91,10 +91,8 @@ def parse_feature(feature_text):
                 append_index = 2
             else:
                 if starts_scenario_tag(line):
-#                    scenario[scenario_tag_index] += list(
-#                        filter(None, (line.replace(' ','').split('Scenario_tag:'))))
                     scenario[scenario_tag_index] += list(
-                        line.replace(' ','').split('Scenario_tag:')[1].split(','))
+                        line.replace(' ','').split('ScenarioTag:')[1].split(','))
                     continue
                 else:
                     scenario[append_index].append(line)

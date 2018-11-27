@@ -163,12 +163,6 @@ class FeatureTestCase(TestCase):
                     ):
                         continue
 
-#                    (
-#                        self.scenario_name,
-#                        scenario_steps,
-#                        scenario_examples,
-#                        scenario_tags,
-#                    ) = scenario
 
                     if scenario_examples:
                         scenario_examples = list(
