@@ -38,8 +38,8 @@ class Planterbox(Plugin):
     checkOnly = False
     tag_list=[]
 
-    def register(self):
-        super(Planterbox, self).register()
+    def __init__(self):
+        super(Plugin, self).__init__()
 
         self.addFlag(
             self.setCheckOnly, None, 'planterbox-check-only',
@@ -53,6 +53,10 @@ class Planterbox(Plugin):
             Examples: tag=abc or tag=abc,def""",
             nargs=1
         )
+        
+        
+    def register(self):
+        super(Planterbox, self).register()
 
         if 'start_time' not in self.config._mvd:
 

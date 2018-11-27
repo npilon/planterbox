@@ -160,3 +160,63 @@ specified either by index (from 0) or by name.
 If your feature includes multiple scenarios with the same name, all will be
 run when that name is given. Names with a trailing period can be specified with
 or without the trailing period.
+
+Validating Tests
+----------------
+
+You can use the ``--planterbox-check-only`` flag to verify that your features
+are correct without running them::
+
+  nose2 --planterbox-check-only planterbox.tests.test_feature
+
+  ----------------------------------------------------------------------
+  Ran 0 tests in 0.000s
+
+  OK
+
+While a failure would produce a traceback::
+
+  nose2 --planterbox-check-only planterbox.tests.test_feature
+  Traceback (most recent call last):
+    File "planterbox_ve/bin/nose2", line 11, in <module>
+      sys.exit(discover())
+    File "nose2/main.py", line 306, in discover
+      return main(*args, **kwargs)
+    File "nose2/main.py", line 100, in __init__
+      super(PluggableTestProgram, self).__init__(**kw)
+    File "/opt/python/lib/python3.6/unittest/main.py", line 94, in __init__
+      self.parseArgs(argv)
+    File "nose2/main.py", line 133, in parseArgs
+      self.createTests()
+    File "nose2/main.py", line 258, in createTests
+      self.testNames, self.module)
+    File "nose2/loader.py", line 68, in loadTestsFromNames
+      for name in event.names]
+    File "nose2/loader.py", line 68, in <listcomp>
+      for name in event.names]
+    File "nose2/loader.py", line 83, in loadTestsFromName
+      result = self.session.hooks.loadTestsFromName(event)
+    File "nose2/events.py", line 225, in __call__
+      result = getattr(plugin, self.method)(event)
+    File "nose2/plugins/loader/discovery.py", line 247, in loadTestsFromName
+      return Discoverer.loadTestsFromName(self, event)
+    File "nose2/plugins/loader/discovery.py", line 84, in loadTestsFromName
+      self._find_tests_in_module(event, module, top_level_dir))
+    File "nose2/plugins/loader/discovery.py", line 229, in _find_tests_in_module
+      event, full_path, top_level_dir):
+    File "nose2/plugins/loader/discovery.py", line 161, in _find_tests_in_dir
+      event, path, entry_path, top_level):
+    File "nose2/plugins/loader/discovery.py", line 176, in _find_tests_in_file
+      result = self.session.hooks.handleFile(evt)
+    File "nose2/events.py", line 225, in __call__
+      result = getattr(plugin, self.method)(event)
+    File "planterbox/planterbox/plugin.py", line 106, in handleFile
+      feature_path=feature_path,
+    File "planterbox/planterbox/plugin.py", line 75, in makeSuiteFromFeature
+      config=self.config,
+    File "planterbox/planterbox/feature.py", line 81, in __init__
+      self.check_scenarios()
+    File "planterbox/planterbox/feature.py", line 227, in check_scenarios
+      raise UnmatchedStepException("Unmatched steps:\n" + '\n'.join(unmatched))
+  planterbox.exceptions.UnmatchedStepException: Unmatched steps:
+          Given I bad 1 and 1

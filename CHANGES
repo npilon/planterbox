@@ -1,3 +1,13 @@
+0.6.8
+=====
+
+- Fix registration of --planterbox-check-only flag
+
+0.6.7
+=====
+
+- Add --planterbox-check-only flag
+
 0.6.5
 =====
 
