@@ -1,3 +1,8 @@
+0.7.0
+=====
+
+- Add support for tagging of tests for improved selective execution
+
 0.6.8
 =====
 

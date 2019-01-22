@@ -17,7 +17,7 @@ with open("README.rst", "r") as readme:
 
 
 setup(name='planterbox',
-      version='0.6.8',
+      version='0.7.0',
       description=description,
       long_description=long_description,
       license='MIT',
