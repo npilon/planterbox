@@ -62,7 +62,7 @@ class FeatureTestCase(TestCase):
     """A test case generated from the scenarios in a feature file."""
 
     def __init__(self, feature_path, scenarios_to_run=None, feature_text=None,
-                 config=None):
+                 config=None, tag_list=()):
         super(FeatureTestCase, self).__init__('nota')
         self.feature_path = feature_path
         self.scenarios_to_run = scenarios_to_run
@@ -79,6 +79,8 @@ class FeatureTestCase(TestCase):
         self.feature_doc = [doc.strip() for doc in header_text[1:]]
         self.step_inventory = list(self.harvest_steps())
         self.check_scenarios()
+        self.tag_list = check_tag_list(tag_list)
+
 
     def id(self):
         if self.scenarios_to_run:
@@ -144,16 +146,22 @@ class FeatureTestCase(TestCase):
             run_hooks(module, self, result, 'before', 'feature')
             try:
                 for i, scenario in enumerate(self.scenarios):
-                    if (
-                        self.scenarios_to_run and
-                        not self.should_run_scenario(i, scenario)
-                    ):
-                        continue
+
                     (
                         self.scenario_name,
                         scenario_steps,
                         scenario_examples,
+                        scenario_tags,
                     ) = scenario
+
+                    if (not matches_tag(scenario_tags, self.tag_list) or
+                        (
+                            self.scenarios_to_run and
+                            not self.should_run_scenario(i, scenario)
+                        )):
+                         continue
+
+
                     if scenario_examples:
                         scenario_examples = list(
                             self.load_examples(scenario_examples))
@@ -208,6 +216,7 @@ class FeatureTestCase(TestCase):
                 self.scenario_name,
                 scenario_steps,
                 scenario_examples,
+                scenario_tags,
             ) = scenario
             if scenario_examples:
                 # Do the example thing
@@ -402,3 +411,20 @@ def run_hook(tester, result, hook):
     except Exception as e:
         result.addError(tester, sys.exc_info())
         raise HookFailedException('Error')
+
+
+def matches_tag(scenario_tags, tag_list):
+    ''' If tags indicated on command line, returns True if a Scenario_tag matches
+    one given on the command line'''
+    if not tag_list:
+        return True
+    else:
+        return set(scenario_tags).intersection(tag_list)
+
+
+def check_tag_list(tag_list):
+    ''' Makes a list of any tags entered on the command line. '''
+    tags = []
+    if len(tag_list) !=0:
+        tags = tag_list[0].split(',')
+    return tags

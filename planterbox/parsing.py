@@ -5,6 +5,7 @@ import re
 
 INDENT = re.compile(r'^\s+')
 SCENARIO = re.compile(r'^\s+Scenario(?: Outline)?:')
+SCENARIO_TAG = re.compile(r'^\s+Scenario Tag:')
 EXAMPLES = re.compile(r'^\s+Examples:')
 
 
@@ -32,6 +33,11 @@ def starts_scenario(line):
     return SCENARIO.match(line)
 
 
+def starts_scenario_tag(line):
+    """Determine if a line signals the start of a scenario."""
+    return SCENARIO_TAG.match(line)
+
+
 def starts_examples(line):
     """Determine if a line signals the start of an example block."""
     return EXAMPLES.match(line)
@@ -57,6 +63,7 @@ def parse_feature(feature_text):
     scenarios = []
     scenario = None
     append_index = 1
+    scenario_tag_index = 3
     scenario_indent = 0
     in_multiline = False
 
@@ -83,11 +90,16 @@ def parse_feature(feature_text):
             elif starts_examples(line):
                 append_index = 2
             else:
-                scenario[append_index].append(line)
+                if starts_scenario_tag(line):
+                    scenario[scenario_tag_index] += list(
+                        line.replace(' ','').split('ScenarioTag:')[1].split(','))
+                    continue
+                else:
+                    scenario[append_index].append(line)
 
         if scenario is None:  # Not elif - want to handle end-of-scenario
             if starts_scenario(line):
-                scenario = [line, [], []]
+                scenario = [line, [], [], []]
                 append_index = 1
                 scenario_indent = indent_level(line)
                 scenarios.append(scenario)

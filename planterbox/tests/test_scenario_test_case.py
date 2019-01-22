@@ -305,3 +305,54 @@ class TestFeatureTestCase(TestCase):
             self.fail(formatted)
 
         self.assertEqual(mock_world.test_thing.call_count, 2)
+
+
+    def test_scenario_tag(self):
+        from planterbox.feature import FeatureTestCase
+        from planterbox import step
+
+        test_feature = """Feature: A Scenario Tag Feature
+
+            Scenario: A Test Scenario.
+                Scenario Tag: math2
+                When I test a thing
+
+            Scenario: An Untagged Test Scenario.
+                When I test a thing
+        """
+
+        @step(r'I test a thing')
+        def test_thing(test):
+            pass
+
+        mock_world = Mock(
+            spec=['test_thing'],
+            return_value=None,
+        )
+        mock_world.__name__ = 'mock'
+        mock_world.test_thing = step(r'I test a thing')(Mock(
+            planterbox_patterns=[],
+        ))
+
+
+        def mock_addFailure(result, exc):
+            self.exc_info = exc
+
+        mock_result = Mock(addFailure=Mock(side_effect=mock_addFailure))
+
+        with patch('planterbox.feature.import_module',
+                   Mock(return_value=mock_world)):
+            test_case = FeatureTestCase(
+               feature_path='foobar.feature',
+                feature_text=test_feature,
+                tag_list = ("math2",)
+            )
+
+            test_case.__module__ = 'mock'
+            test_case.run(mock_result)
+
+        if hasattr(self, 'exc_info'):
+            formatted = test_case.formatTraceback(self.exc_info)
+            self.fail(formatted)
+
+        mock_world.test_thing.assert_called_once()
