@@ -41,7 +41,7 @@ log = logging.getLogger('planterbox')
 
 EXAMPLE_TO_FORMAT = re.compile(r'<(.+?)>')
 FEATURE_NAME = re.compile(r'\.feature(?:\:[\d,]+)?$')
-
+EXAMPLES_FILE = re.compile(r'^\s+file:')
 
 class FeatureExcInfo(tuple):
     """exc_info plus extra information used by ScenarioTestCase"""
@@ -102,13 +102,35 @@ class FeatureTestCase(TestCase):
         if not examples:
             return
 
+        if EXAMPLES_FILE.match(examples[0]):
+            examples = self.read_file_into_examples(examples[0].split('file:')[1])
+
         example_header = example_row(examples[0])
+
         for example in examples[1:]:
             example_data = example_row(example)
             yield {
                 label: datum for label, datum
                 in zip(example_header, example_data)
             }
+
+
+    def read_file_into_examples(self, fname):
+        import csv
+        import os
+        csv_examples = []
+
+        filename = os.path.dirname(__file__) + fname.strip()
+        if filename[-4:] != '.csv':
+            raise Exception('Example file must be a csv file.')
+
+        with open(filename) as csv_file:
+            csv_reader = csv.reader(csv_file)
+            for row in csv_reader:
+                    csv_examples.append(row[0])
+
+        return csv_examples
+
 
     def harvest_steps(self):
         """Find all steps that have been imported into this feature's module"""
