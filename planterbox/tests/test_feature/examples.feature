@@ -16,5 +16,5 @@ Feature: Example Tests
     Scenario Outline: I want to exercise using a csv file for examples
         Given I squiggly-add {<x>} and {<y>}
         Then the result should be <z>
-        Examples: 
-            file: /tests/test_feature/examples.csv
+        Examples file: 
+            /tests/test_feature/examples.csv

@@ -41,7 +41,7 @@ log = logging.getLogger('planterbox')
 
 EXAMPLE_TO_FORMAT = re.compile(r'<(.+?)>')
 FEATURE_NAME = re.compile(r'\.feature(?:\:[\d,]+)?$')
-EXAMPLES_FILE = re.compile(r'^\s+file:')
+FILE_PATH = re.compile(r'^(.+)\/([^\/]+)$')
 
 class FeatureExcInfo(tuple):
     """exc_info plus extra information used by ScenarioTestCase"""
@@ -102,8 +102,11 @@ class FeatureTestCase(TestCase):
         if not examples:
             return
 
-        if EXAMPLES_FILE.match(examples[0]):
-            examples = self.read_file_into_examples(examples[0].split('file:')[1])
+        if FILE_PATH.match(examples[0]):
+            if examples[0][-4:] != '.csv':
+                raise Exception('Example file must be a csv file.')
+            else:
+                examples = self.read_file_into_examples(examples[0].strip())
 
         example_header = example_row(examples[0])
 
@@ -121,9 +124,6 @@ class FeatureTestCase(TestCase):
         csv_examples = []
 
         filename = os.path.dirname(__file__) + fname.strip()
-        if filename[-4:] != '.csv':
-            raise Exception('Example file must be a csv file.')
-
         with open(filename) as csv_file:
             csv_reader = csv.reader(csv_file)
             for row in csv_reader:
