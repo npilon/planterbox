@@ -127,9 +127,11 @@ class FeatureTestCase(TestCase):
         with open(filename) as csv_file:
             csv_reader = csv.reader(csv_file)
             for row in csv_reader:
-                    csv_examples.append(row[0])
+                    csv_examples.append(row)
 
-        return csv_examples
+        formatted_list = [' | '.join(example) for example in csv_examples]
+
+        return formatted_list
 
 
     def harvest_steps(self):
