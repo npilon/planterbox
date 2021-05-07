@@ -136,6 +136,20 @@ scenario multiple times with different values. For example:
                 2 | 1 | 3
                 2 | 2 | 4
 
+You may also specify Examples in a .csv file by using ``Examples file:`` followed by the path to the .csv file on the next line.
+
+.. code:: gherkin
+
+  Feature: Example Tests
+    I want to exercise using a csv file for examples
+
+      Scenario Outline: I want to exercise using a csv file for examples
+          Given I squiggly-add {<x>} and {<y>}
+          Then the result should be <z>
+          Examples file:
+            /tests/test_feature/examples.csv
+
+
 Your ``'before'`` and ``'after'`` ``'scenario'`` hooks will only run
 once for the entire scenario outline.
 

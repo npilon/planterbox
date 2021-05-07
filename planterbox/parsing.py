@@ -7,6 +7,7 @@ INDENT = re.compile(r'^\s+')
 SCENARIO = re.compile(r'^\s+Scenario(?: Outline)?:')
 SCENARIO_TAG = re.compile(r'^\s+Scenario Tag:')
 EXAMPLES = re.compile(r'^\s+Examples:')
+EXAMPLES_FILE = re.compile(r'^\s+Examples file:')
 
 
 class UnclosedMultilineStepError(Exception):
@@ -41,6 +42,11 @@ def starts_scenario_tag(line):
 def starts_examples(line):
     """Determine if a line signals the start of an example block."""
     return EXAMPLES.match(line)
+
+
+def starts_examples_file(line):
+    """Determine if a line signals the start of an example block."""
+    return EXAMPLES_FILE.match(line)
 
 
 def skipline(line):
@@ -87,7 +93,7 @@ def parse_feature(feature_text):
             if line_indent <= scenario_indent:
                 scenario = None
                 scenario_indent = 0
-            elif starts_examples(line):
+            elif starts_examples(line) or starts_examples_file(line):
                 append_index = 2
             else:
                 if starts_scenario_tag(line):
