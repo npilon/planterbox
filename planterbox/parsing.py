@@ -95,6 +95,8 @@ def parse_feature(feature_text):
                 scenario_indent = 0
             elif starts_examples(line) or starts_examples_file(line):
                 append_index = 2
+                if starts_examples_file(line):
+                    scenario[2].append(line)
             else:
                 if starts_scenario_tag(line):
                     scenario[scenario_tag_index] += list(

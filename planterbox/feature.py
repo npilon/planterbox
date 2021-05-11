@@ -102,11 +102,11 @@ class FeatureTestCase(TestCase):
         if not examples:
             return
 
-        if FILE_PATH.match(examples[0]):
-            if examples[0][-4:] != '.csv':
+        if 'Examples file:' in examples[0]:
+            if examples[1][-4:] != '.csv':
                 raise Exception('Example file must be a csv file.')
             else:
-                examples = self.read_file_into_examples(examples[0].strip())
+                examples = self.read_file_into_examples(examples[1].strip())
 
         example_header = example_row(examples[0])
 
@@ -123,7 +123,8 @@ class FeatureTestCase(TestCase):
         import os
         csv_examples = []
 
-        filename = os.path.dirname(__file__) + fname.strip()
+        filename = os.path.join(os.path.dirname(self.feature_path), fname.strip())
+        print(filename)
         with open(filename) as csv_file:
             csv_reader = csv.reader(csv_file)
             for row in csv_reader:
